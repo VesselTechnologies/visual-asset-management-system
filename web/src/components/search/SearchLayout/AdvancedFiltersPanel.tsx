@@ -142,12 +142,12 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                     onChange={({ detail }) => {
                                                         const currentValue =
                                                             filters.date_lastmodified_filter &&
-                                                            Array.isArray(
-                                                                filters.date_lastmodified_filter
-                                                                    .value
-                                                            )
+                                                                Array.isArray(
+                                                                    filters.date_lastmodified_filter
+                                                                        .value
+                                                                )
                                                                 ? (filters.date_lastmodified_filter
-                                                                      .value as string[])
+                                                                    .value as string[])
                                                                 : ["", ""];
                                                         onFilterChange("date_lastmodified_filter", {
                                                             operator: dateOperator,
@@ -159,9 +159,9 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                             filters.date_lastmodified_filter?.value
                                                         )
                                                             ? (
-                                                                  filters.date_lastmodified_filter
-                                                                      .value as string[]
-                                                              )[0]
+                                                                filters.date_lastmodified_filter
+                                                                    .value as string[]
+                                                            )[0]
                                                             : ""
                                                     }
                                                     placeholder="Start date"
@@ -171,12 +171,12 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                     onChange={({ detail }) => {
                                                         const currentValue =
                                                             filters.date_lastmodified_filter &&
-                                                            Array.isArray(
-                                                                filters.date_lastmodified_filter
-                                                                    .value
-                                                            )
+                                                                Array.isArray(
+                                                                    filters.date_lastmodified_filter
+                                                                        .value
+                                                                )
                                                                 ? (filters.date_lastmodified_filter
-                                                                      .value as string[])
+                                                                    .value as string[])
                                                                 : ["", ""];
                                                         onFilterChange("date_lastmodified_filter", {
                                                             operator: dateOperator,
@@ -188,9 +188,9 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                             filters.date_lastmodified_filter?.value
                                                         )
                                                             ? (
-                                                                  filters.date_lastmodified_filter
-                                                                      .value as string[]
-                                                              )[1]
+                                                                filters.date_lastmodified_filter
+                                                                    .value as string[]
+                                                            )[1]
                                                             : ""
                                                     }
                                                     placeholder="End date"
@@ -271,11 +271,11 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                             parseFloat(detail.value) || 0;
                                                         const currentValue =
                                                             filters.num_filesize_filter &&
-                                                            Array.isArray(
-                                                                filters.num_filesize_filter.value
-                                                            )
+                                                                Array.isArray(
+                                                                    filters.num_filesize_filter.value
+                                                                )
                                                                 ? (filters.num_filesize_filter
-                                                                      .value as number[])
+                                                                    .value as number[])
                                                                 : [0, 0];
                                                         const bytesValue = [
                                                             convertToBytes(numValue, sizeUnit),
@@ -292,15 +292,15 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                             filters.num_filesize_filter?.value
                                                         )
                                                             ? String(
-                                                                  convertFromBytes(
-                                                                      (
-                                                                          filters
-                                                                              .num_filesize_filter
-                                                                              .value as number[]
-                                                                      )[0],
-                                                                      sizeUnit
-                                                                  )
-                                                              )
+                                                                convertFromBytes(
+                                                                    (
+                                                                        filters
+                                                                            .num_filesize_filter
+                                                                            .value as number[]
+                                                                    )[0],
+                                                                    sizeUnit
+                                                                )
+                                                            )
                                                             : "0"
                                                     }
                                                     type="number"
@@ -313,11 +313,11 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                             parseFloat(detail.value) || 0;
                                                         const currentValue =
                                                             filters.num_filesize_filter &&
-                                                            Array.isArray(
-                                                                filters.num_filesize_filter.value
-                                                            )
+                                                                Array.isArray(
+                                                                    filters.num_filesize_filter.value
+                                                                )
                                                                 ? (filters.num_filesize_filter
-                                                                      .value as number[])
+                                                                    .value as number[])
                                                                 : [0, 0];
                                                         const bytesValue = [
                                                             currentValue[0],
@@ -334,15 +334,15 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                             filters.num_filesize_filter?.value
                                                         )
                                                             ? String(
-                                                                  convertFromBytes(
-                                                                      (
-                                                                          filters
-                                                                              .num_filesize_filter
-                                                                              .value as number[]
-                                                                      )[1],
-                                                                      sizeUnit
-                                                                  )
-                                                              )
+                                                                convertFromBytes(
+                                                                    (
+                                                                        filters
+                                                                            .num_filesize_filter
+                                                                            .value as number[]
+                                                                    )[1],
+                                                                    sizeUnit
+                                                                )
+                                                            )
                                                             : "0"
                                                     }
                                                     type="number"
@@ -366,13 +366,13 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                                                 }}
                                                 value={
                                                     typeof filters.num_filesize_filter?.value ===
-                                                    "number"
+                                                        "number"
                                                         ? String(
-                                                              convertFromBytes(
-                                                                  filters.num_filesize_filter.value,
-                                                                  sizeUnit
-                                                              )
-                                                          )
+                                                            convertFromBytes(
+                                                                filters.num_filesize_filter.value,
+                                                                sizeUnit
+                                                            )
+                                                        )
                                                         : "0"
                                                 }
                                                 type="number"
@@ -412,7 +412,7 @@ const AdvancedFiltersPanel: React.FC<AdvancedFiltersPanelProps> = ({
                     <>
                         {/* Asset Relationship Filters */}
                         <FormField
-                            label="Asset Relationships"
+                            label="Repository Relationships"
                             description="Filter assets based on their relationships with other assets"
                         >
                             <SpaceBetween direction="vertical" size="s">

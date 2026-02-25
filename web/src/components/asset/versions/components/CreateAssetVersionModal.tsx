@@ -504,13 +504,13 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
             prev.map((f: SelectedFile) =>
                 f.relativeKey === file.relativeKey
                     ? {
-                          ...f,
-                          versionId,
-                          // If the version ID is different from the current one, it's not the current version
-                          isCurrent: versionId === file.versionId ? f.isCurrent : false,
-                          // Keep the version mismatch flag
-                          versionMismatch: f.versionMismatch,
-                      }
+                        ...f,
+                        versionId,
+                        // If the version ID is different from the current one, it's not the current version
+                        isCurrent: versionId === file.versionId ? f.isCurrent : false,
+                        // Keep the version mismatch flag
+                        versionMismatch: f.versionMismatch,
+                    }
                     : f
             )
         );
@@ -664,7 +664,7 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
         <Modal
             visible={visible}
             onDismiss={onDismiss}
-            header="Create New Asset Version"
+            header="Create New Repository Version"
             size="max"
             footer={
                 <Box float="right">
@@ -721,14 +721,14 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
                         options={[
                             { text: "Use all current files and versions", id: "current" },
                             { text: "Select specific files and versions", id: "select" },
-                            { text: "Modify from current asset version", id: "modify" },
+                            { text: "Modify from current repository version", id: "modify" },
                         ]}
                     />
                 </FormField>
 
                 <Alert type="info">
                     <strong>Metadata Versioning:</strong> Creating this version will automatically
-                    snapshot the current metadata and attributes of the asset and all selected
+                    snapshot the current metadata and attributes of the repository and all selected
                     files.
                 </Alert>
 

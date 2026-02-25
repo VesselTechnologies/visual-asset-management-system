@@ -9,9 +9,9 @@ interface VAMSConfig {
     DEV_API_ENDPOINT: string;
 }
 const config: VAMSConfig = {
-    APP_TITLE: "Amazon VAMS",
+    APP_TITLE: "TIAMAT VAMS",
     DEV_API_ENDPOINT: "https://97o933vkj1.execute-api.us-east-1.amazonaws.com/", //'http://localhost:8002/', // Can point to either remote or local API
-    // CUSTOMER_LOGO // defines a alternate logo
+    CUSTOMER_LOGO: "/Darpa-logo-2026.png", // served from public/
 };
 
 export default config;

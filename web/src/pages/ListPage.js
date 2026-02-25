@@ -36,6 +36,7 @@ export default function ListPage(props) {
         isRelatedTable,
         editEnabled,
         hideDeleteButton = false,
+        disableCreate = false,
     } = props;
     const [reload, setReload] = useState(true);
     const [loading, setLoading] = useState(true);
@@ -153,7 +154,11 @@ export default function ListPage(props) {
                             (CreateNewElement || onCreateCallback) && (
                                 <div style={{ float: "right" }}>
                                     <SpaceBetween direction={"horizontal"} size={"m"}>
-                                        <Button onClick={handleOpenNewElement} variant="primary">
+                                        <Button
+                                            onClick={handleOpenNewElement}
+                                            variant="primary"
+                                            disabled={disableCreate}
+                                        >
                                             Create {singularNameTitleCase}
                                         </Button>
                                     </SpaceBetween>
@@ -188,4 +193,5 @@ ListPage.propTypes = {
     isRelatedTable: PropTypes.bool,
     editEnabled: PropTypes.bool,
     hideDeleteButton: PropTypes.bool,
+    disableCreate: PropTypes.bool,
 };

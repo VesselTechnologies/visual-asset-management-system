@@ -71,10 +71,10 @@ export default function UploadManager({
         assetCreationStatus: isExistingAsset ? "completed" : "pending",
         assetLinksStatus:
             !isExistingAsset &&
-            assetDetail.assetLinksFe &&
-            (assetDetail.assetLinksFe.parents?.length ||
-                assetDetail.assetLinksFe.child?.length ||
-                assetDetail.assetLinksFe.related?.length)
+                assetDetail.assetLinksFe &&
+                (assetDetail.assetLinksFe.parents?.length ||
+                    assetDetail.assetLinksFe.child?.length ||
+                    assetDetail.assetLinksFe.related?.length)
                 ? "pending"
                 : "skipped",
         metadataStatus:
@@ -431,11 +431,11 @@ export default function UploadManager({
                         prev.map((item) =>
                             item.size === 0
                                 ? {
-                                      ...item,
-                                      status: "Completed",
-                                      progress: 100,
-                                      loaded: item.total,
-                                  }
+                                    ...item,
+                                    status: "Completed",
+                                    progress: 100,
+                                    loaded: item.total,
+                                }
                                 : item
                         )
                     );
@@ -467,16 +467,16 @@ export default function UploadManager({
                                     prev.map((item) =>
                                         item.index === fileIndex
                                             ? {
-                                                  ...item,
-                                                  progress,
-                                                  loaded: Math.round((progress * item.total) / 100),
-                                                  status:
-                                                      progress === 100
-                                                          ? "Completed"
-                                                          : progress > 0
-                                                          ? "In Progress"
-                                                          : "Queued",
-                                              }
+                                                ...item,
+                                                progress,
+                                                loaded: Math.round((progress * item.total) / 100),
+                                                status:
+                                                    progress === 100
+                                                        ? "Completed"
+                                                        : progress > 0
+                                                            ? "In Progress"
+                                                            : "Queued",
+                                            }
                                             : item
                                     )
                                 );
@@ -684,16 +684,16 @@ export default function UploadManager({
                     prev.map((item) =>
                         item.index === fileIndex
                             ? {
-                                  ...item,
-                                  progress,
-                                  loaded: Math.round((progress * item.total) / 100),
-                                  status:
-                                      progress === 100
-                                          ? "Completed"
-                                          : progress > 0
-                                          ? "In Progress"
-                                          : "Queued",
-                              }
+                                ...item,
+                                progress,
+                                loaded: Math.round((progress * item.total) / 100),
+                                status:
+                                    progress === 100
+                                        ? "Completed"
+                                        : progress > 0
+                                            ? "In Progress"
+                                            : "Queued",
+                            }
                             : item
                     )
                 );
@@ -781,16 +781,16 @@ export default function UploadManager({
                         prev.map((item) =>
                             item.index === fileIdx
                                 ? {
-                                      ...item,
-                                      progress,
-                                      loaded: Math.round((progress * item.total) / 100),
-                                      status:
-                                          progress === 100
-                                              ? "Completed"
-                                              : progress > 0
-                                              ? "In Progress"
-                                              : "Queued",
-                                  }
+                                    ...item,
+                                    progress,
+                                    loaded: Math.round((progress * item.total) / 100),
+                                    status:
+                                        progress === 100
+                                            ? "Completed"
+                                            : progress > 0
+                                                ? "In Progress"
+                                                : "Queued",
+                                }
                                 : item
                         )
                     );
@@ -967,16 +967,16 @@ export default function UploadManager({
                             prev.map((item) =>
                                 item.index === fileIndex
                                     ? {
-                                          ...item,
-                                          progress,
-                                          loaded: Math.round((progress * item.total) / 100),
-                                          status:
-                                              progress === 100
-                                                  ? "Completed"
-                                                  : progress > 0
-                                                  ? "In Progress"
-                                                  : "Queued",
-                                      }
+                                        ...item,
+                                        progress,
+                                        loaded: Math.round((progress * item.total) / 100),
+                                        status:
+                                            progress === 100
+                                                ? "Completed"
+                                                : progress > 0
+                                                    ? "In Progress"
+                                                    : "Queued",
+                                    }
                                     : item
                             )
                         );
@@ -1245,189 +1245,167 @@ export default function UploadManager({
     const failedFilesCount = fileUploadItems.filter((item) => item.status === "Failed").length;
 
     return (
-        <Container header={<Header variant="h2">Upload Progress</Header>}>
-            <SpaceBetween direction="vertical" size="l">
-                {uploadState.errors.length > 0 && (
-                    <Alert type="error" header="Upload Errors">
-                        <ul>
-                            {uploadState.errors.map((error, index) => (
-                                <li key={index}>
-                                    <strong>{error.step}:</strong> {error.message}
-                                </li>
-                            ))}
-                        </ul>
-                    </Alert>
-                )}
+        <Box margin={{ top: "xl" }}>
+            <Container header={<Header variant="h2">Creation progress</Header>}>
+                <SpaceBetween direction="vertical" size="l">
+                    {uploadState.errors.length > 0 && (
+                        <Alert type="error" header="Upload Errors">
+                            <ul>
+                                {uploadState.errors.map((error, index) => (
+                                    <li key={index}>
+                                        <strong>{error.step}:</strong> {error.message}
+                                    </li>
+                                ))}
+                            </ul>
+                        </Alert>
+                    )}
 
-                {cancelledFiles.size > 0 && uploadState.completionStatus === "completed" && (
-                    <Alert type="warning" header="Files Cancelled">
-                        {cancelledFiles.size} file(s) were cancelled during upload. The remaining{" "}
-                        {fileItems.length - cancelledFiles.size} file(s) uploaded successfully.
-                    </Alert>
-                )}
+                    {cancelledFiles.size > 0 && uploadState.completionStatus === "completed" && (
+                        <Alert type="warning" header="Files Cancelled">
+                            {cancelledFiles.size} file(s) were cancelled during upload. The remaining{" "}
+                            {fileItems.length - cancelledFiles.size} file(s) uploaded successfully.
+                        </Alert>
+                    )}
 
-                {(uploadState.largeFileAsynchronousHandling || uploadState.has503Warnings) && (
-                    <Alert type="warning" header="Extended Processing Time">
-                        The service returned some responses indicating longer processing times. Your
-                        files may not be immediately available yet and may take a few minutes to
-                        process. Please check the asset's file manager shortly to verify your files.
-                    </Alert>
-                )}
+                    {(uploadState.largeFileAsynchronousHandling || uploadState.has503Warnings) && (
+                        <Alert type="warning" header="Extended Processing Time">
+                            The service returned some responses indicating longer processing times. Your
+                            files may not be immediately available yet and may take a few minutes to
+                            process. Please check the asset's file manager shortly to verify your files.
+                        </Alert>
+                    )}
 
-                {isMultiSequence && totalSequences > 1 && (
-                    <Alert type="info" header="Multi-Sequence Upload">
-                        Your files are being uploaded in {totalSequences} separate batches. This is
-                        handled automatically.
-                    </Alert>
-                )}
+                    {isMultiSequence && totalSequences > 1 && (
+                        <Alert type="info" header="Multi-Sequence Upload">
+                            Your files are being uploaded in {totalSequences} separate batches. This is
+                            handled automatically.
+                        </Alert>
+                    )}
 
-                {retryMessage && (
-                    <Alert
-                        type={isRateLimitRetry ? "info" : "warning"}
-                        header={isRateLimitRetry ? "Upload Pacing" : "Retrying Operation"}
-                    >
-                        {retryMessage}
-                    </Alert>
-                )}
+                    {retryMessage && (
+                        <Alert
+                            type={isRateLimitRetry ? "info" : "warning"}
+                            header={isRateLimitRetry ? "Upload Pacing" : "Retrying Operation"}
+                        >
+                            {retryMessage}
+                        </Alert>
+                    )}
 
-                <SpaceBetween direction="vertical" size="m">
-                    {!isExistingAsset && (
-                        <Box>
-                            <SpaceBetween direction="vertical" size="xs">
-                                <Box variant="awsui-key-label">Asset Creation</Box>
-                                <SpaceBetween direction="horizontal" size="xs">
-                                    <StatusIndicator
-                                        type={getStatusIndicatorType(
-                                            uploadState.assetCreationStatus
+                    <SpaceBetween direction="vertical" size="m">
+                        {!isExistingAsset && (
+                            <Box>
+                                <SpaceBetween direction="vertical" size="xs">
+                                    <Box variant="awsui-key-label">Repository Creation</Box>
+                                    <SpaceBetween direction="horizontal" size="xs">
+                                        <StatusIndicator
+                                            type={getStatusIndicatorType(
+                                                uploadState.assetCreationStatus
+                                            )}
+                                        >
+                                            {getStatusText(uploadState.assetCreationStatus)}
+                                        </StatusIndicator>
+                                        {uploadState.assetCreationStatus === "completed" &&
+                                            uploadState.createdAssetId && (
+                                                <Link
+                                                    href={`#/databases/${assetDetail.databaseId}/assets/${uploadState.createdAssetId}`}
+                                                >
+                                                    {uploadState.createdAssetId}
+                                                </Link>
+                                            )}
+                                    </SpaceBetween>
+                                </SpaceBetween>
+                            </Box>
+                        )}
+
+                        {uploadState.metadataStatus !== "skipped" && (
+                            <Box>
+                                <SpaceBetween direction="vertical" size="xs">
+                                    <Box variant="awsui-key-label">Metadata</Box>
+                                    <SpaceBetween direction="horizontal" size="xs">
+                                        <StatusIndicator
+                                            type={getStatusIndicatorType(uploadState.metadataStatus)}
+                                        >
+                                            {getStatusText(uploadState.metadataStatus)}
+                                        </StatusIndicator>
+                                        {uploadState.metadataStatus === "failed" && (
+                                            <>
+                                                <Button onClick={handleRetryMetadata}>Retry</Button>
+                                                <Button onClick={handleSkipMetadata}>
+                                                    Skip and Continue
+                                                </Button>
+                                            </>
                                         )}
-                                    >
-                                        {getStatusText(uploadState.assetCreationStatus)}
-                                    </StatusIndicator>
-                                    {uploadState.assetCreationStatus === "completed" &&
-                                        uploadState.createdAssetId && (
-                                            <Link
-                                                href={`#/databases/${assetDetail.databaseId}/assets/${uploadState.createdAssetId}`}
-                                            >
-                                                {uploadState.createdAssetId}
-                                            </Link>
+                                    </SpaceBetween>
+                                </SpaceBetween>
+                            </Box>
+                        )}
+
+                        {uploadState.assetLinksStatus !== "skipped" && (
+                            <Box>
+                                <SpaceBetween direction="vertical" size="xs">
+                                    <Box variant="awsui-key-label">Asset Links Creation</Box>
+                                    <SpaceBetween direction="horizontal" size="xs">
+                                        <StatusIndicator
+                                            type={getStatusIndicatorType(uploadState.assetLinksStatus)}
+                                        >
+                                            {getStatusText(uploadState.assetLinksStatus)}
+                                        </StatusIndicator>
+                                        {uploadState.assetLinksStatus === "failed" && (
+                                            <>
+                                                <Button onClick={handleRetryAssetLinks}>Retry</Button>
+                                                <Button onClick={handleSkipAssetLinks}>
+                                                    Skip and Continue
+                                                </Button>
+                                            </>
                                         )}
+                                    </SpaceBetween>
                                 </SpaceBetween>
-                            </SpaceBetween>
-                        </Box>
-                    )}
+                            </Box>
+                        )}
 
-                    {uploadState.metadataStatus !== "skipped" && (
+                        {/* Upload Initialization removed per request */}
+
                         <Box>
                             <SpaceBetween direction="vertical" size="xs">
-                                <Box variant="awsui-key-label">Metadata</Box>
-                                <SpaceBetween direction="horizontal" size="xs">
-                                    <StatusIndicator
-                                        type={getStatusIndicatorType(uploadState.metadataStatus)}
-                                    >
-                                        {getStatusText(uploadState.metadataStatus)}
-                                    </StatusIndicator>
-                                    {uploadState.metadataStatus === "failed" && (
-                                        <>
-                                            <Button onClick={handleRetryMetadata}>Retry</Button>
-                                            <Button onClick={handleSkipMetadata}>
-                                                Skip and Continue
-                                            </Button>
-                                        </>
-                                    )}
-                                </SpaceBetween>
+                                <Box variant="awsui-key-label">File Upload</Box>
+                                <ProgressBar
+                                    value={uploadState.overallProgress}
+                                    status={getProgressBarStatus(uploadState.uploadStatus)}
+                                    label="Overall Upload Progress"
+                                    additionalInfo={`${completedParts}/${totalParts} parts completed`}
+                                />
                             </SpaceBetween>
                         </Box>
-                    )}
 
-                    {uploadState.assetLinksStatus !== "skipped" && (
-                        <Box>
-                            <SpaceBetween direction="vertical" size="xs">
-                                <Box variant="awsui-key-label">Asset Links Creation</Box>
-                                <SpaceBetween direction="horizontal" size="xs">
-                                    <StatusIndicator
-                                        type={getStatusIndicatorType(uploadState.assetLinksStatus)}
-                                    >
-                                        {getStatusText(uploadState.assetLinksStatus)}
-                                    </StatusIndicator>
-                                    {uploadState.assetLinksStatus === "failed" && (
-                                        <>
-                                            <Button onClick={handleRetryAssetLinks}>Retry</Button>
-                                            <Button onClick={handleSkipAssetLinks}>
-                                                Skip and Continue
-                                            </Button>
-                                        </>
-                                    )}
-                                </SpaceBetween>
-                            </SpaceBetween>
-                        </Box>
-                    )}
-
-                    <Box>
-                        <SpaceBetween direction="vertical" size="xs">
-                            <Box variant="awsui-key-label">Upload Initialization</Box>
-                            <StatusIndicator
-                                type={getStatusIndicatorType(uploadState.uploadInitStatus)}
-                            >
-                                {getStatusText(uploadState.uploadInitStatus)}
-                                {isMultiSequence &&
-                                    uploadState.uploadInitStatus === "in-progress" &&
-                                    ` (${completedInitSequences}/${totalSequences} sequences)`}
-                            </StatusIndicator>
-                        </SpaceBetween>
-                    </Box>
-
-                    <Box>
-                        <SpaceBetween direction="vertical" size="xs">
-                            <Box variant="awsui-key-label">File Upload</Box>
-                            <ProgressBar
-                                value={uploadState.overallProgress}
-                                status={getProgressBarStatus(uploadState.uploadStatus)}
-                                label="Overall Upload Progress"
-                                additionalInfo={`${completedParts}/${totalParts} parts completed`}
-                            />
-                        </SpaceBetween>
-                    </Box>
-
-                    <Box>
-                        <SpaceBetween direction="vertical" size="xs">
-                            <Box variant="awsui-key-label">Upload Completion</Box>
-                            <StatusIndicator
-                                type={getStatusIndicatorType(uploadState.completionStatus)}
-                            >
-                                {getStatusText(uploadState.completionStatus)}
-                                {isMultiSequence &&
-                                    uploadState.completionStatus === "in-progress" &&
-                                    ` (${completedCompleteSequences}/${totalSequences} sequences)`}
-                            </StatusIndicator>
-                        </SpaceBetween>
-                    </Box>
-                </SpaceBetween>
-
-                {uploadState.uploadStatus === "failed" && (
-                    <SpaceBetween direction="horizontal" size="xs">
-                        <Button onClick={handleRetry} variant="primary">
-                            Retry Failed Uploads
-                        </Button>
-                        <Button onClick={handleSkipFailed} variant="normal">
-                            Skip Failed Parts
-                        </Button>
-                        {onCancel && <Button onClick={onCancel}>Back to Review</Button>}
+                        {/* Upload Completion removed per request */}
                     </SpaceBetween>
-                )}
 
-                <FileUploadTable
-                    allItems={fileUploadItems}
-                    resume={false}
-                    showCount={true}
-                    onRetry={failedFilesCount > 0 ? handleRetry : undefined}
-                    onRetryItem={handleRetryFile}
-                    onCancelItem={handleCancelFile}
-                    cancelConfirmFileIndex={cancelConfirmFileIndex}
-                    onConfirmCancel={confirmCancelFile}
-                    onDismissCancel={() => setCancelConfirmFileIndex(null)}
-                />
-            </SpaceBetween>
-        </Container>
+                    {uploadState.uploadStatus === "failed" && (
+                        <SpaceBetween direction="horizontal" size="xs">
+                            <Button onClick={handleRetry} variant="primary">
+                                Retry Failed Uploads
+                            </Button>
+                            <Button onClick={handleSkipFailed} variant="normal">
+                                Skip Failed Parts
+                            </Button>
+                            {onCancel && <Button onClick={onCancel}>Back to Review</Button>}
+                        </SpaceBetween>
+                    )}
+
+                    <FileUploadTable
+                        allItems={fileUploadItems}
+                        resume={false}
+                        showCount={true}
+                        onRetry={failedFilesCount > 0 ? handleRetry : undefined}
+                        onRetryItem={handleRetryFile}
+                        onCancelItem={handleCancelFile}
+                        cancelConfirmFileIndex={cancelConfirmFileIndex}
+                        onConfirmCancel={confirmCancelFile}
+                        onDismissCancel={() => setCancelConfirmFileIndex(null)}
+                    />
+                </SpaceBetween>
+            </Container>
+        </Box>
     );
 }
 

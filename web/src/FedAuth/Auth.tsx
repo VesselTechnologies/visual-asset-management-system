@@ -20,6 +20,7 @@ import Button from "@cloudscape-design/components/button";
 import Box from "@cloudscape-design/components/box";
 import loginBgImageSrc from "../resources/img/login_bg.png";
 import logoDarkImageSrc from "../resources/img/logo_dark.svg";
+import customerLogoSrc from "../resources/img/Darpa-logo-2026.png";
 
 import LoadingScreen from "../components/loading/LoadingScreen";
 import { Alert } from "@cloudscape-design/components";
@@ -240,6 +241,13 @@ const FedLoginBox: React.FC<CognitoFederatedLoginProps> = ({ onLogin }) => {
             <div className={styles.container}>
                 <div className={styles.centeredBox}>
                     <Heading level={3} padding={`${tokens.space.xl} ${tokens.space.xl} 0`}>
+                        {vamsConfig.CUSTOMER_LOGO && (
+                            <img
+                                style={{ width: "100%", paddingBottom: "16px" }}
+                                src={customerLogoSrc}
+                                alt="DARPA Logo"
+                            />
+                        )}
                         <img
                             style={{ width: "100%" }}
                             src={logoDarkImageSrc}
@@ -412,7 +420,7 @@ const Auth: React.FC<AuthProps> = (props) => {
                     resetSession();
                 }
             })
-            .catch((error) => {});
+            .catch((error) => { });
     }, [ampInit]);
 
     //External OAUTH Effect
@@ -787,6 +795,13 @@ const Auth: React.FC<AuthProps> = (props) => {
                     <div className={styles.container}>
                         <div className={styles.centeredBox}>
                             <Heading level={3}>
+                                {vamsConfig.CUSTOMER_LOGO && (
+                                    <img
+                                        style={{ width: "100%", paddingBottom: "16px" }}
+                                        src={customerLogoSrc}
+                                        alt="TIAMAT Logo"
+                                    />
+                                )}
                                 <img
                                     style={{ width: "100%" }}
                                     src={logoDarkImageSrc}
@@ -797,8 +812,8 @@ const Auth: React.FC<AuthProps> = (props) => {
                                 Log in with SSO
                             </Button>
                             {config.externalOAuthIdpScopeMfa != undefined &&
-                            config.externalOAuthIdpScopeMfa != "undefined" &&
-                            config.externalOAuthIdpScopeMfa != "" ? (
+                                config.externalOAuthIdpScopeMfa != "undefined" &&
+                                config.externalOAuthIdpScopeMfa != "" ? (
                                 <>
                                     <Box
                                         fontWeight="normal"

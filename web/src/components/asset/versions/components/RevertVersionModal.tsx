@@ -37,7 +37,6 @@ export const RevertVersionModal: React.FC<RevertVersionModalProps> = ({
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [comment, setComment] = useState<string>("");
-    const [revertMetadata, setRevertMetadata] = useState<boolean>(false);
 
     // Handle revert
     const handleRevert = async () => {
@@ -55,7 +54,7 @@ export const RevertVersionModal: React.FC<RevertVersionModalProps> = ({
                 assetId,
                 assetVersionId: `${version.Version}`,
                 comment,
-                revertMetadata,
+                revertMetadata: false,
             });
 
             if (success) {
@@ -120,13 +119,6 @@ export const RevertVersionModal: React.FC<RevertVersionModalProps> = ({
                         Permanently deleted files will not be restored and will be discarded from
                         the new version.
                     </div>
-                    {revertMetadata && (
-                        <div style={{ marginTop: "8px" }}>
-                            <strong>Note:</strong> Metadata and attributes will also be reverted to
-                            match version v{version.Version}, replacing all current metadata and
-                            attributes for the asset and its files.
-                        </div>
-                    )}
                 </Alert>
 
                 <Box>
@@ -148,23 +140,6 @@ export const RevertVersionModal: React.FC<RevertVersionModalProps> = ({
                     </SpaceBetween>
                 </Box>
 
-                <FormField
-                    label="Revert Options"
-                    description="Choose what to revert from this version"
-                >
-                    <Toggle
-                        checked={revertMetadata}
-                        onChange={({ detail }) => setRevertMetadata(detail.checked)}
-                    >
-                        <Box variant="span">
-                            <strong>Revert Metadata and Attributes</strong>
-                            <Box variant="p" color="text-body-secondary" margin={{ top: "xxs" }}>
-                                Also restore the metadata and attributes from this version to the
-                                asset and files (default: off)
-                            </Box>
-                        </Box>
-                    </Toggle>
-                </FormField>
 
                 <FormField
                     label="Revert Comment *"

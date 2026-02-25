@@ -295,8 +295,8 @@ export default function AssetGrid(props) {
                                     <>
                                         {e.specifiedPipelines && e.specifiedPipelines.length > 0
                                             ? e.specifiedPipelines.map((pipeline, i) => {
-                                                  return <div key={i}>{pipeline.name}</div>;
-                                              })
+                                                return <div key={i}>{pipeline.name}</div>;
+                                            })
                                             : "none"}
                                     </>
                                 );
@@ -370,11 +370,11 @@ export default function AssetGrid(props) {
                 // visibleSections={["description", "type", "size"]}
                 empty={
                     <Box textAlign="center" color="inherit">
-                        <b>No assets</b>
+                        <b>No repositories</b>
                         <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-                            No Assets to display.
+                            No Repositories to display.
                         </Box>
-                        <Button>Create Asset</Button>
+                        <Button>Create Repository</Button>
                     </Box>
                 }
                 filter={

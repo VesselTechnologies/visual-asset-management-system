@@ -107,14 +107,14 @@ export const UpdateAsset = ({ asset, ...props }: UpdateAssetProps) => {
         const tagTypes = tagTypesString ? JSON.parse(tagTypesString) : [];
         const initTags = asset.tags
             ? asset.tags.map((tagName: string) => {
-                  const tagType = tagTypes.find((type: any) => type.tags.includes(tagName));
-                  const label = tagType ? `${tagName} (${tagType.tagTypeName})` : tagName;
+                const tagType = tagTypes.find((type: any) => type.tags.includes(tagName));
+                const label = tagType ? `${tagName} (${tagType.tagTypeName})` : tagName;
 
-                  return {
-                      label: label,
-                      value: tagName,
-                  };
-              })
+                return {
+                    label: label,
+                    value: tagName,
+                };
+            })
             : [];
 
         setSelectedTags(initTags);
@@ -158,14 +158,16 @@ export const UpdateAsset = ({ asset, ...props }: UpdateAssetProps) => {
         const validation = {
             assetName: validateNonZeroLengthTextAsYouType(assetDetail.assetName),
             description: validateNonZeroLengthTextAsYouType(assetDetail.description),
+            /* tags validation disabled per request
             tags: validateRequiredTagTypeSelected(
                 selectedTags.map((tag) => tag.value!),
                 tagTypes
             ),
+            */
         };
         setValidationText(validation);
 
-        const isValid = !(validation.assetName || validation.description || validation.tags);
+        const isValid = !(validation.assetName || validation.description);
         setIsValid(isValid);
     }, [selectedTags, assetDetail.assetName, assetDetail.description, isFormTouched]);
 
@@ -199,12 +201,12 @@ export const UpdateAsset = ({ asset, ...props }: UpdateAssetProps) => {
                             }}
                             disabled={(inProgress && !error.isError) || !isValid}
                         >
-                            Update Asset
+                            Update Repository
                         </Button>
                     </SpaceBetween>
                 </Box>
             }
-            header="Update Asset"
+            header="Update Repository"
         >
             <SpaceBetween direction="vertical" size="l">
                 <FormField
@@ -263,6 +265,7 @@ export const UpdateAsset = ({ asset, ...props }: UpdateAssetProps) => {
                         data-testid="isDistributable-select"
                     />
                 </FormField>
+                {/* Tags section removed per request
                 <FormField
                     label="Tags"
                     constraintText={constraintText.tags}
@@ -286,6 +289,7 @@ export const UpdateAsset = ({ asset, ...props }: UpdateAssetProps) => {
                         }}
                     />
                 </FormField>
+                */}
                 {error.isError && (
                     <ProgressBar
                         value={0}

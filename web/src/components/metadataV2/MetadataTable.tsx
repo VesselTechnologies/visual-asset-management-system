@@ -178,9 +178,9 @@ export const MetadataTable: React.FC<MetadataTableProps> = React.memo(
 
             switch (entityType) {
                 case "asset":
-                    return "Asset Metadata";
+                    return "Repository Metadata";
                 case "assetLink":
-                    return "Asset Link Metadata";
+                    return "Repository Link Metadata";
                 case "file":
                     return "File Metadata";
                 case "database":
@@ -424,9 +424,9 @@ export const MetadataTable: React.FC<MetadataTableProps> = React.memo(
                                             row={row}
                                             index={actualIndex}
                                             rows={rows}
-                                            onEdit={() => {}} // No-op, rows are always editable
+                                            onEdit={() => { }} // No-op, rows are always editable
                                             onCancel={() => onCancelEdit(actualIndex)}
-                                            onSave={() => {}} // No-op, changes are auto-saved
+                                            onSave={() => { }} // No-op, changes are auto-saved
                                             onDelete={() => onDeleteRow(actualIndex)}
                                             onKeyChange={(key) => onKeyChange(actualIndex, key)}
                                             onTypeChange={(type) => onTypeChange(actualIndex, type)}
@@ -436,7 +436,7 @@ export const MetadataTable: React.FC<MetadataTableProps> = React.memo(
                                             onValidationError={
                                                 onValidationError
                                                     ? (error) =>
-                                                          onValidationError(actualIndex, error)
+                                                        onValidationError(actualIndex, error)
                                                     : undefined
                                             }
                                             readOnly={readOnly}

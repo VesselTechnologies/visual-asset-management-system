@@ -96,10 +96,10 @@ export interface GetMetadataSchemasResponse {
 
 export const ENTITY_TYPE_LABELS: Record<MetadataSchemaEntityType, string> = {
     databaseMetadata: "Database Metadata",
-    assetMetadata: "Asset Metadata",
+    assetMetadata: "Repository Metadata",
     fileMetadata: "File Metadata",
     fileAttribute: "File Attribute",
-    assetLinkMetadata: "Asset Link Metadata",
+    assetLinkMetadata: "Repository Link Metadata",
 };
 
 export const VALUE_TYPE_LABELS: Record<MetadataValueType, string> = {

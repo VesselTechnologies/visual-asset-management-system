@@ -65,7 +65,6 @@ export function EnhancedFileManager({
         isSearching: false,
         refreshTrigger: 0,
         showArchived: false,
-        showNonIncluded: false,
         flattenedItems: [],
         totalAssetSize: 0,
         paginationTokens: { basic: null, detailed: null },
@@ -262,13 +261,6 @@ export function EnhancedFileManager({
             // Filter out archived files if showArchived is false
             if (!state.showArchived) {
                 filteredFiles = filteredFiles.filter((file) => !file.isArchived);
-            }
-
-            // Filter for non-included files if showNonIncluded is true
-            if (state.showNonIncluded) {
-                filteredFiles = filteredFiles.filter(
-                    (file) => file.currentAssetVersionFileVersionMismatch
-                );
             }
 
             const fileTree = addFiles(filteredFiles, initialState.fileTree);

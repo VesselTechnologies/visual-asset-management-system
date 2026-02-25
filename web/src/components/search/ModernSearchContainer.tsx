@@ -52,8 +52,8 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     );
     const [useMapView] = useState(
         config.featuresEnabled?.includes(featuresEnabled.LOCATIONSERVICES) &&
-            !useNoOpenSearch &&
-            allowedViews.includes("map")
+        !useNoOpenSearch &&
+        allowedViews.includes("map")
     );
 
     // Hooks
@@ -420,9 +420,6 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     if (useNoOpenSearch) {
         return (
             <Box>
-                <Alert type="info" header="Limited Search Mode">
-                    OpenSearch is disabled. Using basic asset listing instead.
-                </Alert>
                 <ListPage
                     singularName={Synonyms.Asset}
                     singularNameTitleCase={Synonyms.Asset}
@@ -479,7 +476,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                         cardSize={preferences.cardSize}
                         showThumbnails={preferences.showThumbnails}
                         recordType={recordType}
-                        onOpenPreview={() => {}}
+                        onOpenPreview={() => { }}
                         currentPageIndex={currentPage}
                         pagesCount={pageCount}
                         onPageChange={(pageIndex) =>
@@ -488,14 +485,14 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                         onPreferencesChange={showPreferences ? handlePreferencesChange : undefined}
                         preferences={preferences}
                         onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
-                        onDeleteSelected={showBulkActions ? () => {} : undefined}
+                        onDeleteSelected={showBulkActions ? () => { } : undefined}
                         totalItems={searchState.result?.hits?.total?.value}
                     />
                 );
 
             case "map":
                 if (useMapView && recordType === "asset") {
-                    return <SearchPageMapView state={searchState} dispatch={() => {}} />;
+                    return <SearchPageMapView state={searchState} dispatch={() => { }} />;
                 }
                 // Fall through to table view if map not available
                 return (
@@ -552,7 +549,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                        "An error occurred while searching"
+                                                    "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
@@ -597,7 +594,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                        "An error occurred while searching"
+                                                    "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
@@ -676,7 +673,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                        "An error occurred while searching"
+                                                    "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
@@ -721,7 +718,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                        "An error occurred while searching"
+                                                    "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
