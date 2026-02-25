@@ -60,7 +60,6 @@ export interface FileManagerStateValues {
     isSearching: boolean;
     refreshTrigger: number; // Used to trigger a refresh of the file list
     showArchived: boolean; // Toggle to show/hide archived files
-    showNonIncluded: boolean; // Toggle to show/hide non-included files
     flattenedItems: FileTree[]; // Flattened array of all items for shift-selection
     totalAssetSize: number; // Total size of all files in the asset (excluding folders)
     paginationTokens: { basic: string | null; detailed: string | null }; // Track pagination tokens

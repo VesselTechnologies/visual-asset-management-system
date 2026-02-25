@@ -41,7 +41,7 @@ import { FileInfo } from "../../../visualizerPlugin/core/types";
 import { FileManagerContext } from "./FileTreeView";
 
 // File Info Panel Component
-export function FileDetailsPanel({}: FileInfoPanelProps) {
+export function FileDetailsPanel({ }: FileInfoPanelProps) {
     const { state, dispatch } = useContext(FileManagerContext)!;
     const navigate = useNavigate();
     const { databaseId, assetId } = useParams();
@@ -622,7 +622,7 @@ export function FileDetailsPanel({}: FileInfoPanelProps) {
                                         {item.isFolder !== undefined ? (
                                             item.isFolder
                                         ) : item.subTree.length > 0 ||
-                                          item.keyPrefix.endsWith("/") ? (
+                                            item.keyPrefix.endsWith("/") ? (
                                             <Icon name="folder" />
                                         ) : (
                                             <Icon name="file" />
@@ -918,8 +918,8 @@ export function FileDetailsPanel({}: FileInfoPanelProps) {
                         isMultiSelect
                             ? selectedItems.filter((item) => !item.isFolder)
                             : selectedItem && !isFolder
-                            ? [selectedItem]
-                            : []
+                                ? [selectedItem]
+                                : []
                     }
                     databaseId={databaseId!}
                     assetId={assetId!}
@@ -968,26 +968,26 @@ export function FileDetailsPanel({}: FileInfoPanelProps) {
                                 <ButtonDropdown
                                     items={
                                         selectedItem.relativePath === "/" &&
-                                        selectedItem.level === 0
+                                            selectedItem.level === 0
                                             ? [
-                                                  {
-                                                      id: "create-subfolder",
-                                                      text: "Create Sub-Folder",
-                                                      iconName: "folder",
-                                                  },
-                                              ]
+                                                {
+                                                    id: "create-subfolder",
+                                                    text: "Create Sub-Folder",
+                                                    iconName: "folder",
+                                                },
+                                            ]
                                             : [
-                                                  {
-                                                      id: "create-subfolder",
-                                                      text: "Create Sub-Folder",
-                                                      iconName: "folder",
-                                                  },
-                                                  {
-                                                      id: "delete-folder",
-                                                      text: "Delete Folder",
-                                                      iconName: "remove",
-                                                  },
-                                              ]
+                                                {
+                                                    id: "create-subfolder",
+                                                    text: "Create Sub-Folder",
+                                                    iconName: "folder",
+                                                },
+                                                {
+                                                    id: "delete-folder",
+                                                    text: "Delete Folder",
+                                                    iconName: "remove",
+                                                },
+                                            ]
                                     }
                                     onItemClick={({ detail }) => {
                                         switch (detail.id) {
@@ -1001,7 +1001,7 @@ export function FileDetailsPanel({}: FileInfoPanelProps) {
                                     }}
                                 >
                                     {selectedItem.relativePath === "/" && selectedItem.level === 0
-                                        ? "Asset Operations"
+                                        ? "Repository Operations"
                                         : "Folder Operations"}
                                 </ButtonDropdown>
 
@@ -1175,8 +1175,8 @@ export function FileDetailsPanel({}: FileInfoPanelProps) {
                             {selectedItem.relativePath === "/" && selectedItem.level === 0
                                 ? "Asset"
                                 : isFolder
-                                ? "Folder"
-                                : "File"}
+                                    ? "Folder"
+                                    : "File"}
                         </div>
                     </div>
 
@@ -1223,11 +1223,11 @@ export function FileDetailsPanel({}: FileInfoPanelProps) {
                                 }}
                                 onDeletePreview={
                                     asset?.previewLocation?.Key ||
-                                    (asset?.previewLocation as any)?.key ||
-                                    assetDetailState?.previewLocation?.Key ||
-                                    (assetDetailState?.previewLocation as any)?.key ||
-                                    (typeof assetDetailState?.previewLocation === "string" &&
-                                        assetDetailState?.previewLocation)
+                                        (asset?.previewLocation as any)?.key ||
+                                        assetDetailState?.previewLocation?.Key ||
+                                        (assetDetailState?.previewLocation as any)?.key ||
+                                        (typeof assetDetailState?.previewLocation === "string" &&
+                                            assetDetailState?.previewLocation)
                                         ? () => setShowDeletePreviewModal(true)
                                         : undefined
                                 }

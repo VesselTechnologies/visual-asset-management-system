@@ -216,21 +216,13 @@ export default function ViewAsset() {
                         <Header variant="h1">
                             {showApiError
                                 ? "Asset Information Unavailable"
-                                : `${asset?.assetName || ""}${
-                                      asset?.status === "archived" ? " (Archived)" : ""
-                                  }`}
+                                : `${asset?.assetName || ""}${asset?.status === "archived" ? " (Archived)" : ""
+                                }`}
                         </Header>
 
                         {/* Only render asset details and related components if there's no API error */}
                         {!showApiError && (
                             <>
-                                {/* Asset Details Pane */}
-                                <AssetDetailsPane
-                                    asset={asset}
-                                    databaseId={databaseId || ""}
-                                    onOpenUpdateAsset={handleOpenUpdateAsset}
-                                    onOpenDeleteModal={handleOpenDeleteModal}
-                                />
 
                                 {/* Tabbed Container */}
                                 <TabbedContainer
@@ -243,17 +235,14 @@ export default function ViewAsset() {
                                     filePathToNavigate={filePathToNavigate}
                                 />
 
-                                {/* Metadata - New MetadataV2 Component */}
-                                <ErrorBoundary componentName="Metadata">
-                                    {databaseId && assetId && (
-                                        <MetadataContainer
-                                            entityType="asset"
-                                            entityId={assetId}
-                                            databaseId={databaseId}
-                                            mode="online"
-                                        />
-                                    )}
-                                </ErrorBoundary>
+                                {/* Asset Details Pane */}
+                                <AssetDetailsPane
+                                    asset={asset}
+                                    databaseId={databaseId || ""}
+                                    onOpenUpdateAsset={handleOpenUpdateAsset}
+                                    onOpenDeleteModal={handleOpenDeleteModal}
+                                />
+
                             </>
                         )}
                     </SpaceBetween>

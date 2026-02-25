@@ -3,59 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 
 import Box from "@cloudscape-design/components/box";
-import Button from "@cloudscape-design/components/button";
 import ColumnLayout from "@cloudscape-design/components/column-layout";
 import Container from "@cloudscape-design/components/container";
 import Grid from "@cloudscape-design/components/grid";
-import Header from "@cloudscape-design/components/header";
-import Icon from "@cloudscape-design/components/icon";
 import SpaceBetween from "@cloudscape-design/components/space-between";
 
-import { ExternalLinkItem } from "../common/common-components";
 import "../styles/landing-page.scss";
 
-import addPipelinesImageSrc from "../resources/img/add_pipelines.png";
-import buildWorkflowsImageSrc from "../resources/img/build_workflows.png";
-import uploadAndManageImageSrc from "../resources/img/upload_and_manage.png";
-import visualize3dVrImageSrc from "../resources/img/visualize_3d_vr.png";
-import Synonyms from "../synonyms";
-
-const CarouselRadio = ({ id, setSlide, slide }) => {
-    return (
-        <input
-            type="radio"
-            name="radio-buttons"
-            id={id}
-            onChange={(evt) => setSlide(evt.target.id)}
-            checked={slide === id}
-        />
-    );
-};
-
-const LandingPage = (props) => {
-    const { navigationOpen } = props;
-    const [carouselHeight, setCarouselHeight] = useState(400);
-    const [slide, setSlide] = useState("img-1");
-    const firstCarouselImageEl = useRef(null);
-
-    useEffect(() => {
-        function handleResize() {
-            const currentHeight = firstCarouselImageEl?.current?.clientHeight;
-            if (currentHeight !== carouselHeight) {
-                setCarouselHeight(currentHeight);
-            }
-        }
-        setTimeout(() => handleResize(), 100);
-
-        window.addEventListener("resize", handleResize);
-        return () => {
-            window.removeEventListener("resize", handleResize);
-        };
-    }, [navigationOpen, carouselHeight]);
-
+const LandingPage = () => {
     return (
         <Box margin={{ bottom: "l" }}>
             <div className="custom-home__header">
@@ -84,7 +42,7 @@ const LandingPage = (props) => {
                                 fontSize="display-l"
                                 color="inherit"
                             >
-                                Amazon VAMS
+                                TIAMAT VAMS
                             </Box>
                             <Box
                                 fontWeight="light"
@@ -92,14 +50,17 @@ const LandingPage = (props) => {
                                 fontSize="display-l"
                                 color="inherit"
                             >
-                                Management, distribution and automation for visual assets
+                                Robots, Worlds, Sim-Ready Assets,
+                                <br />
+                                and Policies for Physical Intelligence
                             </Box>
                             <Box variant="p" fontWeight="light">
                                 <span className="custom-home__header-sub-title">
-                                    Visual Asset Management with Amazon VAMS is a purpose built
-                                    platform for storing and managing visual assets in the cloud,
-                                    and a plugin system which allows for customize-able
-                                    visualization, transformation, and delivery of these assets.
+                                    An AWS S3 powered solution for large file version control
+                                    <br />
+                                    Store, view, and share files up to 5 Terabytes in size
+                                    <br />
+                                    Access high-fidelity open-source models in one place
                                 </span>
                             </Box>
                         </div>
@@ -124,12 +85,8 @@ const LandingPage = (props) => {
                 <Grid
                     gridDefinition={[
                         {
-                            colspan: { xl: 6, l: 5, s: 6, xxs: 10 },
+                            colspan: { xl: 8, l: 8, s: 10, xxs: 10 },
                             offset: { l: 2, xxs: 1 },
-                        },
-                        {
-                            colspan: { xl: 2, l: 3, s: 4, xxs: 10 },
-                            offset: { s: 0, xxs: 1 },
                         },
                     ]}
                 >
@@ -140,94 +97,20 @@ const LandingPage = (props) => {
                                     How it works
                                 </Box>
                                 <Container>
-                                    <div className="carousel">
-                                        <ul
-                                            className="slides"
-                                            style={{ height: carouselHeight + "px" }}
-                                        >
-                                            <CarouselRadio
-                                                id="img-1"
-                                                setSlide={setSlide}
-                                                slide={slide}
-                                            />
-                                            <li className="slide-container">
-                                                <div className="slide-image">
-                                                    <img
-                                                        ref={firstCarouselImageEl}
-                                                        src={uploadAndManageImageSrc}
-                                                        alt={`Upload & Manage ${Synonyms.Assets}`}
-                                                    />
-                                                </div>
-                                            </li>
-                                            <CarouselRadio
-                                                id="img-2"
-                                                setSlide={setSlide}
-                                                slide={slide}
-                                            />
-                                            <li className="slide-container">
-                                                <div className="slide-image">
-                                                    <img
-                                                        src={visualize3dVrImageSrc}
-                                                        alt="Visualize in 3d & VR"
-                                                    />
-                                                </div>
-                                            </li>
-                                            <CarouselRadio
-                                                id="img-3"
-                                                setSlide={setSlide}
-                                                slide={slide}
-                                            />
-
-                                            <li className="slide-container">
-                                                <div className="slide-image">
-                                                    <img
-                                                        src={addPipelinesImageSrc}
-                                                        alt="Add Pipelines"
-                                                    />
-                                                </div>
-                                            </li>
-                                            <CarouselRadio
-                                                id="img-4"
-                                                setSlide={setSlide}
-                                                slide={slide}
-                                            />
-
-                                            <li className="slide-container">
-                                                <div className="slide-image">
-                                                    <img
-                                                        src={buildWorkflowsImageSrc}
-                                                        alt="Build Workflows"
-                                                    />
-                                                </div>
-                                            </li>
-                                            <div className="carousel-dots">
-                                                <label
-                                                    htmlFor="img-1"
-                                                    className="carousel-dot"
-                                                    id="img-dot-1"
-                                                ></label>
-                                                <label
-                                                    htmlFor="img-2"
-                                                    className="carousel-dot"
-                                                    id="img-dot-2"
-                                                ></label>
-                                                <label
-                                                    htmlFor="img-3"
-                                                    className="carousel-dot"
-                                                    id="img-dot-3"
-                                                ></label>
-                                                <label
-                                                    htmlFor="img-4"
-                                                    className="carousel-dot"
-                                                    id="img-dot-4"
-                                                ></label>
-                                            </div>
-                                        </ul>
+                                    <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden" }}>
+                                        <iframe
+                                            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                                            src="https://www.youtube.com/embed/kgaO45SyaO4?si=RYnke9Lxqr4-fJZM"
+                                            title="YouTube video player"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            referrerPolicy="strict-origin-when-cross-origin"
+                                            allowFullScreen
+                                        />
                                     </div>
                                 </Container>
                             </div>
 
-                            <div>
+                            {/* <div>
                                 <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
                                     Benefits and features
                                 </Box>
@@ -295,11 +178,11 @@ const LandingPage = (props) => {
                                         </div>
                                     </ColumnLayout>
                                 </Container>
-                            </div>
+                            </div> */}
                         </SpaceBetween>
                     </div>
 
-                    <div className="custom-home__sidebar">
+                    {/* <div className="custom-home__sidebar">
                         <SpaceBetween size="xxl">
                             <Container
                                 header={
@@ -337,7 +220,7 @@ const LandingPage = (props) => {
                                 Coming Soon
                             </Container>
                         </SpaceBetween>
-                    </div>
+                    </div> */}
                 </Grid>
             </Box>
         </Box>

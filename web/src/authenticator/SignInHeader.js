@@ -4,18 +4,21 @@
  */
 
 import { Heading, useTheme } from "@aws-amplify/ui-react";
-import logoDarkImageSrc from "../resources/img/logo_dark.svg";
+import customerLogoSrc from "../resources/img/Darpa-logo-2026.png";
+import config from "../config";
 
 export function SignInHeader() {
     const { tokens } = useTheme();
 
     return (
         <Heading level={3} padding={`${tokens.space.xl} ${tokens.space.xl} 0`}>
-            <img
-                style={{ width: "100%", paddingTop: 0 }}
-                src={logoDarkImageSrc}
-                alt="Visual Asset Management System Logo"
-            />
+            {config.CUSTOMER_LOGO && (
+                <img
+                    style={{ width: "100%", paddingBottom: "16px" }}
+                    src={customerLogoSrc}
+                    alt="DARPA Logo"
+                />
+            )}
         </Heading>
     );
 }

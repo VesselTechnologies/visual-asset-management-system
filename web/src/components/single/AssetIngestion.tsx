@@ -314,7 +314,7 @@ export default function AssetIngestion() {
 
     return (
         <Box padding={{ top: "m", horizontal: "l" }}>
-            <Container header={<Header variant="h2">Asset Ingestion</Header>}>
+            <Container header={<Header variant="h2">Repository Ingestion</Header>}>
                 <SpaceBetween size="l">
                     <Grid gridDefinition={[{ colspan: 2 }, { colspan: 3 }]}>
                         <FormField label="Choose File">
@@ -336,7 +336,7 @@ export default function AssetIngestion() {
                                 showFileThumbnail
                             />
                         </FormField>
-                        <FormField label="Upload Asset">
+                        <FormField label="Upload Repository">
                             <Button
                                 variant="primary"
                                 onClick={() => {
@@ -345,7 +345,7 @@ export default function AssetIngestion() {
                                 loading={uploading}
                                 disabled={!file}
                             >
-                                {uploading ? "Uploading..." : "Upload Asset"}
+                                {uploading ? "Uploading..." : "Upload Repository"}
                             </Button>
                         </FormField>
                     </Grid>

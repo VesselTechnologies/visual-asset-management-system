@@ -95,48 +95,47 @@ export default function AssetUploadWorkflow({
     };
 
     return (
-        <Container header={<Header variant="h2">Asset Upload</Header>}>
-            <SpaceBetween direction="vertical" size="l">
-                <UploadManager
-                    assetDetail={assetDetail}
-                    metadata={metadata}
-                    fileItems={allFileItems}
-                    onUploadComplete={handleUploadComplete}
-                    onError={(error) => {
-                        // Just log the error but don't switch to error state
-                        console.error("Upload error:", error);
-                    }}
-                    isExistingAsset={isExistingAsset}
-                    onCancel={onCancel}
-                    keyPrefix={keyPrefix}
-                />
+        <SpaceBetween direction="vertical" size="l">
+            <UploadManager
+                assetDetail={assetDetail}
+                metadata={metadata}
+                fileItems={allFileItems}
+                onUploadComplete={handleUploadComplete}
+                onError={(error) => {
+                    // Just log the error but don't switch to error state
+                    console.error("Upload error:", error);
+                }}
+                isExistingAsset={isExistingAsset}
+                onCancel={onCancel}
+                keyPrefix={keyPrefix}
+            />
 
-                {uploadComplete && (
-                    <Box>
-                        <SpaceBetween direction="vertical" size="m">
-                            {isExistingAsset ? (
-                                // Message for existing assets
-                                uploadResponse?.message?.includes("Preview file upload failed") ? (
-                                    <Alert type="warning" header="Upload Completed with Warnings">
-                                        Files have been added to asset {uploadResponse?.assetId},
-                                        but there were issues with the preview file upload.
-                                    </Alert>
-                                ) : uploadResponse?.overallSuccess === false ? (
-                                    <Alert
-                                        type="warning"
-                                        header="Upload Completed with Some Failures"
-                                    >
-                                        Some files have been added to asset{" "}
-                                        {uploadResponse?.assetId}, but there were issues with some
-                                        file uploads. See the error details below.
-                                    </Alert>
-                                ) : (
-                                    <Alert type="success" header="Upload Complete">
-                                        Files have been successfully added to asset{" "}
-                                        {uploadResponse?.assetId}.
-                                    </Alert>
-                                )
-                            ) : // Message for new assets
+            {uploadComplete && (
+                <Box>
+                    <SpaceBetween direction="vertical" size="m">
+                        {isExistingAsset ? (
+                            // Message for existing assets
+                            uploadResponse?.message?.includes("Preview file upload failed") ? (
+                                <Alert type="warning" header="Upload Completed with Warnings">
+                                    Files have been added to asset {uploadResponse?.assetId},
+                                    but there were issues with the preview file upload.
+                                </Alert>
+                            ) : uploadResponse?.overallSuccess === false ? (
+                                <Alert
+                                    type="warning"
+                                    header="Upload Completed with Some Failures"
+                                >
+                                    Some files have been added to asset{" "}
+                                    {uploadResponse?.assetId}, but there were issues with some
+                                    file uploads. See the error details below.
+                                </Alert>
+                            ) : (
+                                <Alert type="success" header="Upload Complete">
+                                    Files have been successfully added to asset{" "}
+                                    {uploadResponse?.assetId}.
+                                </Alert>
+                            )
+                        ) : // Message for new assets
                             uploadResponse?.message?.includes("Preview file upload failed") ? (
                                 <Alert type="warning" header="Upload Completed with Warnings">
                                     Asset {uploadResponse?.assetId} has been created and asset files
@@ -155,35 +154,34 @@ export default function AssetUploadWorkflow({
                                 </Alert>
                             )}
 
-                            {/* Display failed file details if there are any */}
-                            {uploadResponse?.overallSuccess === false &&
-                                uploadResponse?.fileResults && (
-                                    <Alert type="error" header="Failed File Details">
-                                        <ul>
-                                            {uploadResponse.fileResults
-                                                .filter((file) => !file.success)
-                                                .map((file, index) => (
-                                                    <li key={index}>
-                                                        <strong>{file.relativeKey}:</strong>{" "}
-                                                        {file.error || "Unknown error"}
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    </Alert>
-                                )}
+                        {/* Display failed file details if there are any */}
+                        {uploadResponse?.overallSuccess === false &&
+                            uploadResponse?.fileResults && (
+                                <Alert type="error" header="Failed File Details">
+                                    <ul>
+                                        {uploadResponse.fileResults
+                                            .filter((file) => !file.success)
+                                            .map((file, index) => (
+                                                <li key={index}>
+                                                    <strong>{file.relativeKey}:</strong>{" "}
+                                                    {file.error || "Unknown error"}
+                                                </li>
+                                            ))}
+                                    </ul>
+                                </Alert>
+                            )}
 
-                            <SpaceBetween direction="horizontal" size="xs">
-                                <Button onClick={handleViewAsset} variant="primary">
-                                    View Asset
-                                </Button>
-                                <Button onClick={onCancel}>
-                                    {isExistingAsset ? "Return to Asset Files" : "Return to Assets"}
-                                </Button>
-                            </SpaceBetween>
+                        <SpaceBetween direction="horizontal" size="xs">
+                            <Button onClick={handleViewAsset} variant="primary">
+                                View Repository
+                            </Button>
+                            <Button onClick={onCancel}>
+                                {isExistingAsset ? "Return to Repository Files" : "Return to Repositories"}
+                            </Button>
                         </SpaceBetween>
-                    </Box>
-                )}
-            </SpaceBetween>
-        </Container>
+                    </SpaceBetween>
+                </Box>
+            )}
+        </SpaceBetween>
     );
 }

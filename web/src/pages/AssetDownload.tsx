@@ -308,8 +308,7 @@ async function downloadFolder(
         // Flatten the file tree
         const files = flattenFileTree(tree);
         console.log(
-            `Starting download of ${files.length} files in ${
-                flattenHierarchy ? "flatten" : "preserve"
+            `Starting download of ${files.length} files in ${flattenHierarchy ? "flatten" : "preserve"
             } mode`
         );
 
@@ -702,7 +701,7 @@ export default function AssetDownloadsPage() {
                             )}
 
                             {allComplete && (
-                                <Button onClick={handleReturnToAsset}>Return to View Asset</Button>
+                                <Button onClick={handleReturnToAsset}>Return to View Repository</Button>
                             )}
                         </SpaceBetween>
 

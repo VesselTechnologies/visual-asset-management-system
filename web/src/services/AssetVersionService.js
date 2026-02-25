@@ -44,8 +44,7 @@ export const fetchAllAssetVersions = async ({ databaseId, assetId, pageSize = 10
             nextToken = response.NextToken || null;
 
             console.log(
-                `Fetched ${versions.length} versions, total so far: ${
-                    allVersions.length
+                `Fetched ${versions.length} versions, total so far: ${allVersions.length
                 }, nextToken: ${nextToken ? "exists" : "null"}`
             );
         } while (nextToken);

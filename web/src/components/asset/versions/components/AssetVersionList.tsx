@@ -382,11 +382,11 @@ export const AssetVersionList: React.FC<AssetVersionListProps> = ({
                         disabled={item.fileCount === 0}
                         ariaLabel={
                             item.fileCount > 0
-                                ? `Download ${item.fileCount} asset files`
+                                ? `Download ${item.fileCount} repository files`
                                 : "No files available for download"
                         }
                     >
-                        Download Assets
+                        Download Repository
                     </Button>
                     {/* Only show revert button for non-current versions */}
                     {!item.isCurrent && (
@@ -608,9 +608,8 @@ export const AssetVersionList: React.FC<AssetVersionListProps> = ({
             <Modal
                 visible={showDownloadModal}
                 onDismiss={() => setShowDownloadModal(false)}
-                header={`Download Asset Version ${
-                    downloadVersion ? `v${downloadVersion.Version}` : ""
-                }`}
+                header={`Download Repository Version ${downloadVersion ? `v${downloadVersion.Version}` : ""
+                    }`}
                 footer={
                     <Box float="right">
                         <SpaceBetween direction="horizontal" size="xs">

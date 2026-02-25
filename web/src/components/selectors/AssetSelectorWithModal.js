@@ -23,7 +23,7 @@ export default function AssetSelectorWithModal(props) {
             visible={open}
             closeAriaLabel="Close modal"
             size="medium"
-            header="Select Asset"
+            header="Select Repository"
         >
             <AssetSelector pathViewType={pathViewType} />
         </Modal>

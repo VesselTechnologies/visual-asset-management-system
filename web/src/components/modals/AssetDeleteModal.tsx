@@ -96,8 +96,8 @@ const AssetDeleteModal: React.FC<AssetDeleteModalProps> = ({
     const itemName = isMultipleItems
         ? `${items.length} ${isAssetMode ? Synonyms.Assets : "Files"}`
         : isAssetMode
-        ? items[0]?.assetName || items[0]?.str_assetname
-        : items[0]?.name || items[0]?.displayName || "file";
+            ? items[0]?.assetName || items[0]?.str_assetname
+            : items[0]?.name || items[0]?.displayName || "file";
 
     const handleOperationChange = (operation: "archive" | "delete") => {
         setState((prev) => ({ ...prev, operation }));
@@ -255,13 +255,13 @@ const AssetDeleteModal: React.FC<AssetDeleteModalProps> = ({
             // Call the success callback
             onSuccess(state.operation);
         } catch (error: any) {
-            console.error(`Error processing ${isAssetMode ? "assets" : "files"}:`, error);
+            console.error(`Error processing ${isAssetMode ? "repositories" : "files"}:`, error);
             setState((prev) => ({
                 ...prev,
                 loading: false,
                 error:
                     error.message ||
-                    `An error occurred while processing the ${isAssetMode ? "assets" : "files"}.`,
+                    `An error occurred while processing the ${isAssetMode ? "repositories" : "files"}.`,
             }));
         }
     };
@@ -272,8 +272,8 @@ const AssetDeleteModal: React.FC<AssetDeleteModalProps> = ({
                 ? Synonyms.Assets
                 : Synonyms.Asset
             : isMultipleItems
-            ? "Files"
-            : "File";
+                ? "Files"
+                : "File";
 
         if (state.operation === "archive") {
             return `Archive ${itemType}`;
@@ -331,7 +331,7 @@ const AssetDeleteModal: React.FC<AssetDeleteModalProps> = ({
                             Are you sure you want to archive <b>{itemName}</b>?
                             <br />
                             {isAssetMode
-                                ? "Archived assets will not appear in normal results but can be restored later."
+                                ? "Archived repositories will not appear in normal results but can be restored later."
                                 : "Archived files will not appear in normal results but can be restored later."}
                         </>
                     ) : (
@@ -351,7 +351,7 @@ const AssetDeleteModal: React.FC<AssetDeleteModalProps> = ({
                         }
                         checked={state.operation === "delete"}
                     >
-                        Permanently delete {isAssetMode ? "asset" : "file"} instead of archiving.
+                        Permanently delete {isAssetMode ? "repository" : "file"} instead of archiving.
                         This will remove all versions and sub-versions associated with the entity.
                     </Toggle>
                 )}
@@ -360,7 +360,7 @@ const AssetDeleteModal: React.FC<AssetDeleteModalProps> = ({
                 {isAssetMode && state.operation === "archive" && (
                     <FormField
                         label="Reason for archiving"
-                        description="Please provide a reason for archiving this asset."
+                        description="Please provide a reason for archiving this repository."
                         errorText={
                             state.error && !state.reason.trim() ? "Reason is required" : undefined
                         }

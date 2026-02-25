@@ -71,37 +71,21 @@ export const TabbedContainer: React.FC<TabbedContainerProps> = ({
                                 </Suspense>
                             ),
                         },
-                        {
-                            id: "relationships",
-                            label: "Relationships",
-                            content: (
-                                <Suspense
-                                    fallback={<LoadingSpinner text="Loading Relationships..." />}
-                                >
-                                    <AssetLinksTab
-                                        mode="view"
-                                        assetId={assetId}
-                                        databaseId={databaseId}
-                                        isActive={activeTabId === "relationships"}
-                                    />
-                                </Suspense>
-                            ),
-                        },
-                        {
-                            id: "workflows",
-                            label: "Workflows",
-                            content: (
-                                <Suspense fallback={<LoadingSpinner text="Loading Workflows..." />}>
-                                    <WorkflowTab
-                                        databaseId={databaseId}
-                                        assetId={assetId}
-                                        isActive={activeTabId === "workflows"}
-                                        onExecuteWorkflow={onExecuteWorkflow}
-                                        refreshTrigger={workflowRefreshTrigger}
-                                    />
-                                </Suspense>
-                            ),
-                        },
+                        // {
+                        //     id: "workflows",
+                        //     label: "Workflows",
+                        //     content: (
+                        //         <Suspense fallback={<LoadingSpinner text="Loading Workflows..." />}>
+                        //             <WorkflowTab
+                        //                 databaseId={databaseId}
+                        //                 assetId={assetId}
+                        //                 isActive={activeTabId === "workflows"}
+                        //                 onExecuteWorkflow={onExecuteWorkflow}
+                        //                 refreshTrigger={workflowRefreshTrigger}
+                        //             />
+                        //         </Suspense>
+                        //     ),
+                        // },
                         {
                             id: "comments",
                             label: "Comments",

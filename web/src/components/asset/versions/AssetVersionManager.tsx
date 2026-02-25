@@ -576,7 +576,7 @@ export const AssetVersionManager: React.FC = () => {
                             </SpaceBetween>
                         }
                     >
-                        Asset Versions
+                        Repository Versions
                     </Header>
                 }
             >
@@ -655,7 +655,7 @@ export const AssetVersionManager: React.FC = () => {
                                                                     style={{ fontWeight: "bold" }}
                                                                 >
                                                                     {comparisonType ===
-                                                                    "two-versions"
+                                                                        "two-versions"
                                                                         ? `${index + 1}.`
                                                                         : ""}{" "}
                                                                     Version {version.Version}

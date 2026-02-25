@@ -248,9 +248,8 @@ function SearchResults() {
             {state.searchResults.map((item) => (
                 <div
                     key={item.id}
-                    className={`asset-links-search-result-item ${
-                        state.selectedNode?.id === item.id ? "selected" : ""
-                    }`}
+                    className={`asset-links-search-result-item ${state.selectedNode?.id === item.id ? "selected" : ""
+                        }`}
                     onClick={(e: React.MouseEvent) => {
                         // Handle Ctrl+click for navigation to asset page
                         if (e.ctrlKey && item.type === "asset" && item.assetData) {
@@ -280,7 +279,7 @@ function SearchResults() {
                     <span className="asset-links-search-result-type">
                         {item.relationshipType
                             ? item.relationshipType.charAt(0).toUpperCase() +
-                              item.relationshipType.slice(1)
+                            item.relationshipType.slice(1)
                             : "Unknown"}
                     </span>
                 </div>
@@ -344,7 +343,7 @@ export function AssetLinksTreeView() {
             <Container
                 header={
                     <Header variant="h2" description="Manage asset relationships for the new asset">
-                        Asset Relationships
+                        Repository Relationships
                     </Header>
                 }
             >
