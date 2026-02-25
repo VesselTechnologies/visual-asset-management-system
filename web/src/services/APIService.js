@@ -17,10 +17,28 @@ export const getAmplifyConfig = async () => {
         );
         console.log(amplifyConfigUrl.href);
         const response = await fetch(amplifyConfigUrl);
-        return response.json();
+
+        if (!response.ok) {
+            console.error("getAmplifyConfig: HTTP error", response.status, response.statusText);
+            // Return null on error - don't return corrupted data
+            // This allows the caller to detect the error and not cache bad data
+            return null;
+        }
+
+        const config = await response.json();
+
+        // Validate that we got a proper config object (not an error response)
+        if (!config || typeof config !== "object" || Array.isArray(config)) {
+            console.error("getAmplifyConfig: Invalid config response", config);
+            return null;
+        }
+
+        return config;
     } catch (error) {
-        console.log(error);
-        return [false, error?.message];
+        console.error("getAmplifyConfig: Fetch error", error);
+        // Return null on error - don't return corrupted data like [false, error.message]
+        // This prevents caching invalid data that would cause crashes
+        return null;
     }
 };
 
@@ -601,6 +619,199 @@ export const fetchConstraints = async (api = API) => {
     } catch (error) {
         console.log(error);
         return error?.message;
+    }
+};
+
+/**
+ * Returns array of all Cognito users
+ * @returns {Promise<Array|boolean>}
+ */
+export const fetchCognitoUsers = async (api = API) => {
+    try {
+        let response = await api.get("api", "user/cognito", {});
+        let items = [];
+        const init = { queryStringParameters: { startingToken: null } };
+
+        // Handle direct response with users array
+        if (response.users && Array.isArray(response.users)) {
+            items = items.concat(response.users);
+            while (response.nextToken) {
+                init["queryStringParameters"]["startingToken"] = response.nextToken;
+                response = await api.get("api", "user/cognito", init);
+                if (response.users) {
+                    items = items.concat(response.users);
+                }
+            }
+            return items;
+        }
+        // Handle legacy response format with message wrapper
+        else if (response.message) {
+            if (response.message.users && Array.isArray(response.message.users)) {
+                items = items.concat(response.message.users);
+                while (response.message.nextToken) {
+                    init["queryStringParameters"]["startingToken"] = response.message.nextToken;
+                    response = await api.get("api", "user/cognito", init);
+                    if (response.message && response.message.users) {
+                        items = items.concat(response.message.users);
+                    }
+                }
+                return items;
+            } else if (response.message.Items) {
+                items = items.concat(response.message.Items);
+                while (response.message.NextToken) {
+                    init["queryStringParameters"]["startingToken"] = response.message.NextToken;
+                    response = await api.get("api", "user/cognito", init);
+                    items = items.concat(response.message.Items);
+                }
+                return items;
+            } else {
+                return response.message;
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return errorMessage;
+    }
+};
+
+/**
+ * Creates a new Cognito user
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @param {string} params.email - Email address
+ * @param {string} params.phone - Phone number (optional, E.164 format)
+ * @returns {Promise<[boolean, string]>}
+ */
+export const createCognitoUser = async ({ userId, email, phone }, api = API) => {
+    try {
+        const body = { userId, email };
+        if (phone) {
+            body.phone = phone;
+        }
+
+        const response = await api.post("api", "user/cognito", { body });
+
+        if (response.message) {
+            if (
+                response.message.indexOf("error") !== -1 ||
+                response.message.indexOf("Error") !== -1
+            ) {
+                console.log(response.message);
+                return [false, response.message];
+            } else {
+                return [true, response.message];
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
+    }
+};
+
+/**
+ * Updates an existing Cognito user
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @param {string} params.email - Email address (optional)
+ * @param {string} params.phone - Phone number (optional, E.164 format)
+ * @returns {Promise<[boolean, string]>}
+ */
+export const updateCognitoUser = async ({ userId, email, phone }, api = API) => {
+    try {
+        const body = {};
+        if (email) body.email = email;
+        if (phone) body.phone = phone;
+
+        const response = await api.put("api", `user/cognito/${userId}`, { body });
+
+        if (response.message) {
+            if (
+                response.message.indexOf("error") !== -1 ||
+                response.message.indexOf("Error") !== -1
+            ) {
+                console.log(response.message);
+                return [false, response.message];
+            } else {
+                return [true, response.message];
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
+    }
+};
+
+/**
+ * Deletes a Cognito user
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @returns {Promise<[boolean, string]>}
+ */
+export const deleteCognitoUser = async ({ userId }, api = API) => {
+    try {
+        const response = await api.del("api", `user/cognito/${userId}`, {});
+
+        if (response.message) {
+            console.log(response.message);
+            return [true, response.message];
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
+    }
+};
+
+/**
+ * Resets a Cognito user's password
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @returns {Promise<[boolean, string]>}
+ */
+export const resetCognitoUserPassword = async ({ userId }, api = API) => {
+    try {
+        const response = await api.post("api", `user/cognito/${userId}/resetPassword`, {
+            body: { userId },
+        });
+
+        if (response.message) {
+            if (
+                response.message.indexOf("error") !== -1 ||
+                response.message.indexOf("Error") !== -1
+            ) {
+                console.log(response.message);
+                return [false, response.message];
+            } else {
+                return [true, response.message];
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
     }
 };
 

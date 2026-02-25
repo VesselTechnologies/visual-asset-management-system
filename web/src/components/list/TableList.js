@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useCollection } from "@cloudscape-design/collection-hooks";
 import {
@@ -36,6 +36,8 @@ export default function TableList(props) {
         editEnabled,
         onReload,
         hideDeleteButton = false,
+        customHeaderActions,
+        onSelectionChange,
     } = props;
     const {
         columnDefinitions,
@@ -96,6 +98,9 @@ export default function TableList(props) {
     //implementation per polaris docs example
     const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
         useCollection(allItems, {
+            selection: {
+                trackBy: listDefinition.elementId,
+            },
             filtering: {
                 empty: (
                     <EmptyState
@@ -106,13 +111,14 @@ export default function TableList(props) {
                 noMatch: (
                     <EmptyState
                         title="No matches"
-                        subtitle="We can’t find a match."
+                        subtitle="We can't find a match."
                         action={
                             <Button onClick={() => actions.setFiltering("")}>Clear filter</Button>
                         }
                     />
                 ),
                 filteringFunction: (item, filteringText) => {
+                    // First check active filters
                     for (let i = 0; i < filteredFilterColumns.length; i++) {
                         const filterColumnName = filteredFilterColumns[i].name;
                         if (activeFilters[filterColumnName] !== null) {
@@ -123,28 +129,37 @@ export default function TableList(props) {
 
                     const filteringTextLowerCase = filteringText.toLowerCase();
                     if (filteringTextLowerCase !== "") {
+                        // Check if ANY visible column matches
                         for (let i = 0; i < filteredVisibleColumns.length; i++) {
                             const visibleColumnName = filteredVisibleColumns[i];
+                            const value = item[visibleColumnName];
+                            // Handle null, undefined, and convert to string for comparison
                             if (
-                                item[visibleColumnName] !== undefined &&
-                                item[visibleColumnName]
-                                    ?.toString()
-                                    .toLowerCase()
-                                    .indexOf(filteringTextLowerCase) !== -1
+                                value !== undefined &&
+                                value !== null &&
+                                value.toString().toLowerCase().indexOf(filteringTextLowerCase) !==
+                                    -1
                             ) {
                                 return true;
                             }
                         }
+                        // If we get here, no match was found
                         return false;
                     }
+                    // If no filtering text, include the item
                     return true;
                 },
             },
             pagination: { pageSize: 15 },
             sorting: {},
-
-            selection: {},
         });
+
+    // Notify parent of selection changes
+    useEffect(() => {
+        if (onSelectionChange) {
+            onSelectionChange(collectionProps.selectedItems || []);
+        }
+    }, [collectionProps.selectedItems, onSelectionChange]);
 
     const handleFilterSelected = (prop, value) => {
         const newActiveFilters = Object.assign({}, activeFilters);
@@ -245,6 +260,11 @@ export default function TableList(props) {
                 itemNames[i] = selectedItems[i]?.workflowId || "unknown";
             }
         }
+        if (pluralName === "Cognito User Management") {
+            for (let i = 0; i < length; i++) {
+                itemNames[i] = selectedItems[i]?.userId || "unknown";
+            }
+        }
         const showFeatureComingSoonModal = shouldHideCancelButton;
         return (
             <>
@@ -290,6 +310,7 @@ export default function TableList(props) {
                         }
                         actions={
                             <SpaceBetween direction="horizontal" size="xs">
+                                {customHeaderActions}
                                 {editEnabled && (
                                     <Button
                                         disabled={
@@ -326,22 +347,29 @@ export default function TableList(props) {
                         return {
                             id,
                             header,
-                            cell: (e) => (
-                                <CellWrapper item={e}>
-                                    {highlightMatches(
-                                        e[id],
-                                        (() => {
-                                            const textFilterCaptureElement =
-                                                document.getElementById("textFilterCapture");
-                                            const textFilterInputElement =
-                                                textFilterCaptureElement.querySelectorAll(
-                                                    ":scope input"
-                                                )[0];
-                                            return textFilterInputElement?.value;
-                                        })()
-                                    )}
-                                </CellWrapper>
-                            ),
+                            cell: (e) => {
+                                const value = e[id];
+                                // Don't pass null or undefined to highlightMatches
+                                if (value === null || value === undefined) {
+                                    return <CellWrapper item={e}>{""}</CellWrapper>;
+                                }
+                                return (
+                                    <CellWrapper item={e}>
+                                        {highlightMatches(
+                                            value,
+                                            (() => {
+                                                const textFilterCaptureElement =
+                                                    document.getElementById("textFilterCapture");
+                                                const textFilterInputElement =
+                                                    textFilterCaptureElement.querySelectorAll(
+                                                        ":scope input"
+                                                    )[0];
+                                                return textFilterInputElement?.value;
+                                            })()
+                                        )}
+                                    </CellWrapper>
+                                );
+                            },
                             sortingField,
                         };
                     }
@@ -399,7 +427,8 @@ export default function TableList(props) {
                                         pluralName !== "tag types" &&
                                         pluralName !== "tags" &&
                                         pluralName !== "Subscriptions" &&
-                                        pluralName !== "User Roles"
+                                        pluralName !== "User Roles" &&
+                                        pluralName !== "Cognito User Management"
                                     )
                                         return (
                                             <Select
@@ -479,4 +508,7 @@ TableList.propTypes = {
     UpdateSelectedElement: PropTypes.func,
     createNewElement: PropTypes.element,
     onReload: PropTypes.func,
+    customHeaderActions: PropTypes.element,
+    onSelectionChange: PropTypes.func,
+    hideDeleteButton: PropTypes.bool,
 };

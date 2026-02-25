@@ -2,7 +2,62 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0] (2026-04-30)
+
+### Major Change Summary:
+
+### ⚠ BREAKING CHANGES
+
+### Features
+
+-   **Web** Added new open-source Needle USD 3D WASM Web Viewer to the viewer plugin system for `.usd, .usda, .usdc, .usdz` files. Supports full dependency chain loading of files although Needle WASM libraries have some limitations on supported USD features and dependency depth for textures.
+    -   Note: Uses WASM which relies on either the Cloudfront deployment mode or the newly implemented front-end service worker to set proper https headers to allow WASM to load. If these are not set due to additional organizational security restrictions, this viewer will not load. Safari currently does not support the way we implemented this viewer.
+    -   Note: Needle Viewer in our implementation has issues with loading dependencies from compressed (USDC) files as these cannot be reliabiliy parsed out ahead of time.
+-   **Web** Added new open-source ThreeJS 3D Web Viewer to the viewer plugin system for `.gltf, .glb, .obj, .fbx, .stl, .ply, .dae, .3ds, .3mf, .stp, .step, .iges, .brep` files. Supports full dependency chain loading of files and scene graph support. ThreeJS will now be the first primary viewer of choice for most common mesh file types. Additional libraries need to be installed to support CAD file types that are LGPL licensed and requires WASM support (see ./web/customInstalls/threejs/README.md for information).
+    -   Note: The CAD loading uses WASM which relies on either the Cloudfront deployment mode or using the newly implemented front-end service worker to set proper https headers to allow WASM to load. If these are not set due to additional organizational security restrictions, this viewer will simply not work for CAD extensions however will still work with the other mesh extensions viewed. Safari currently does not support the way we implemented the CAD WASM library.
+-   **Web** Online3DViewer web viewer configuration has been adjusted to only show up for the 3D files types of `.3dm, .amf, .bim, .off, .wrl`, these file types are currently not supported by the ThreeJS viewer.
+-   Updated the `/database/{databaseId}/assets/{assetId}/download/stream/{proxy+}` GET API endpoint to support an optional `?versionId =` query parameter to specify the version being retrieved
+-   **Web** Updated Veerum Viewer to use the new streaming API endpoint query parameter for versionId, this will enable proper file version viewing.
+-   Added new API, web, and CLI functionality to manage cognito users to remove the requirement of needing to go into the AWS Console or CLI to add/update/remove/reset password for users. This is only enabled when Cognito authentication is enabled.
+    -   **Web** Includes new navigation page for `Cognito User Management`
+    -   New API endpoints `/user/cognito` GET/POST, `/user/cognito/{userId}` PUT/DELETE, `/user/cognito/{userId}/resetPassword` POST
+-   **CLI** Added commands for admin functionality such as adding new cognito users (with new APIs), users in role management, role management, and constraint management. This update finishes the CLI upgrades to have the majority of the web functionality as commands in the CLI.
+-   Added new `POST /auth/constraintsTemplateImport` API endpoint for bulk-importing permission constraints from JSON templates in a single API call. The API handles server-side variable substitution, UUID generation, groupId mapping, and constraint creation in DynamoDB, replacing the previous client-side XML parsing and one-by-one constraint creation approach.
+    -   **CLI** Added `vamscli role constraint template import` command to import permission constraint templates via the new API endpoint.
+    -   Added a new tool `tools/permissionsSetup/apply_template.py` that uses the CLI to automate the deployment of new roles and constraint templates as needed. This can be used by admins to help setup new permission structures for when new databases are created for an organization.
+    -   Added pre-built JSON permission templates in `documentation/permissionsTemplates/` for common permission profiles: `database-admin.json` (13 constraints), `database-user.json` (15 constraints), `database-readonly.json` (10 constraints), `global-readonly.json` (10 constraints), and `deny-tagged-assets.json` (1 constraint). Templates define complete constraint sets for roles with variable placeholders for database IDs and role names.
+    -   Added comprehensive Permissions Guide (`documentation/PermissionsGuide.md`) covering the full ABAC/RBAC constraint matrix, two-tier authorization enforcement, GLOBAL keyword usage, archive vs permanent delete enforcement, deny overlay patterns, and step-by-step examples for common permission profiles.
+
+### Bug Fixes
+
+-   Permission constraints now allow `GLOBAL` as an input for criteria field values, previously this threw a API validation error
+-   Revised CDK deployment code for the ALB website to try to fix a rare-recurring error when deploying that ALB targets need a unique IP list (issue with how custom resources were fetching subnet IPs and applying them)
+-   **Web** Updated web initial amplify config logic to properly error if the API config cannot be fetched and not to set error valued config into cookies, causing future reloads to use the errored config (and not refetch the API) without a cookie/cache reset.
+-   **CLI** Continued fixes to various CLI commands to make sure outputs when using the `--json-ouput` parameter only return a JSON output. This round of fixes is to take care of both missing inputs that required confirmation or showing errors becuase of missing parameters
+-   **Web** Fixed the file selector pop-up on the asset upload for existing assets to work in Firefox; folder selection on Firefox is still not yet supported
+-   **Web** Fixed bug in some table lists that prevented single row selects in certain scenarios (would select all rows)
+
+### Chores
+
+-   Created `CLOUDFRONTDEPLOY` feature enablement flag to let the front-end know the type of web deployment the website is being served under
+-   **Web** Added service worker and proxy to manually set header flags for both local debugging and/or to set for website deployment to allow features like WebAssembly (WASM) loading.
+-   Added additional validation checks to the APIs regarding creating workflows and workflow execution
+-   Added featuresEnabled dynamoDB table writing check during CDK deployment to de-deplicate and overwrite existing values
+-   Updated description of viewers that currently do not support showing non-current version files for the primary selected file (will always show the latest file).
+-   **Web** Changed some of the columns that show up on the new asset and existing asset file table to not show the progress bar or status. This will help alleviate confusion on the pre-upload screen for users who were expecting files to start uploading after immediate selection.
+-   Updated CLINE/KIRO workflows for clarifying CLI patterns for json-output
+
+### Known Outstanding Issues
+
+-   With multiple S3 bucket support, scenarios may occur where identical assetIds exist across different buckets/prefixes in different databases, causing lookup conflicts in Asset Versions, Comments, and subscriptions functionality. This can only occur with manual S3 changes, as assetIds generated from VAMS uploads use unique GUIDs.
+-   Using the same pipeline ID in both GLOBAL and non-GLOBAL databases will cause overlap conflicts and issues.
+-   Pipeline metadata inputs have a limit when sending to ECS pipelines. Assets and/or files with extensive metadata may exceed the ECS limit for JSON metadata input (8k characters). Future pipeline overhauls will convert metadata input to a file to resolve this.
+-   When dealing with hundreds to thousands of files per asset or very large files (TB-size), some API asset/file operations may time-out on the request (after 29 seconds) however the lambda may still be processing the request and successfully complete the operation (up to 15 minutes). This also goes for OpenSearch indexing when there are hundreds of thousands to millions of files to re-index. The re-index may actually not finish after the 15 minute lambda time-out with millions of files and require different re-indexing technique locally or in a container. Asynchronous methods and optional containerized processing are being evaluated for the future for all API requests to prevent this.
+
 ## [2.4.1] (2026-01-30)
+
+-   **Web** Added new open-source Needle USD 3D WASM Web Viewer to the viewer plugin system for `.usd, .usda, .usdc, .usdz` files. Supports full dependency chain loading of files although Needle WASM libraries have some limitations on supported USD features and dependency depth for textures.
+    -   Note: This viewer requires web deployment with Cloudfront; ALB web deployment (with direct S3 serving) has restrictions for adding required headers and will not currently work. Creates `CLOUDFRONTDEPLOY` feature enablement flag to track this to properly enable/disable the viewer for availability. This means this viewer will also not curently work for GovCloud environments.
 
 ### Bug Fixes
 
@@ -15,6 +70,8 @@ All notable changes to this project will be documented in this file. See [standa
 -   **Web** Asset FileManager will now open all parent folders to a selected file in the tree when opened directly from an external page/source (ie. from asset/file search)
 
 ### Chores
+
+-   **Web** Added service worker and proxy to manually set header flags for local debugging and/or attempt to set for CDN deployment. Currently verified to work for local debugging so web assembly (WASM) components can be viewed.
 
 -   Fix readme instructions for v2.3 to v2.4 migration scripts to remove steps that shouldn't have been added
 

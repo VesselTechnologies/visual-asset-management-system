@@ -95,18 +95,6 @@ export class CoreVAMSStack extends cdk.Stack {
             this.enabledFeatures.push(VAMS_APP_FEATURES.GOVCLOUD);
         }
 
-        //Setup ALB Feature Enabled
-        if (props.config.app.useAlb.enabled) {
-            this.enabledFeatures.push(VAMS_APP_FEATURES.ALBDEPLOY);
-        }
-
-        //Select auth provider
-        if (props.config.app.authProvider.useCognito.enabled) {
-            this.enabledFeatures.push(VAMS_APP_FEATURES.AUTHPROVIDER_COGNITO);
-        } else if (props.config.app.authProvider.useExternalOAuthIdp.enabled) {
-            this.enabledFeatures.push(VAMS_APP_FEATURES.AUTHPROVIDER_EXTERNALOAUTHIDP);
-        }
-
         if (props.config.app.webUi.allowUnsafeEvalFeatures) {
             this.enabledFeatures.push(VAMS_APP_FEATURES.ALLOWUNSAFEEVAL);
         }
@@ -168,6 +156,13 @@ export class CoreVAMSStack extends cdk.Stack {
             trail.logAllS3DataEvents();
         }
 
+        //Select auth provider
+        if (props.config.app.authProvider.useCognito.enabled) {
+            this.enabledFeatures.push(VAMS_APP_FEATURES.AUTHPROVIDER_COGNITO);
+        } else if (props.config.app.authProvider.useExternalOAuthIdp.enabled) {
+            this.enabledFeatures.push(VAMS_APP_FEATURES.AUTHPROVIDER_EXTERNALOAUTHIDP);
+        }
+
         //See if we have enabled SAML settings
         if (props.config.app.authProvider.useCognito.useSaml) {
             this.enabledFeatures.push(VAMS_APP_FEATURES.AUTHPROVIDER_COGNITO_SAML);
@@ -216,6 +211,15 @@ export class CoreVAMSStack extends cdk.Stack {
                     }
                 );
                 staticWebBuilderNestedStack.addDependency(storageResourcesNestedStack);
+
+                //Set features
+                if (props.config.app.useCloudFront.enabled) {
+                    this.enabledFeatures.push(VAMS_APP_FEATURES.CLOUDFRONTDEPLOY);
+                }
+
+                if (props.config.app.useAlb.enabled) {
+                    this.enabledFeatures.push(VAMS_APP_FEATURES.ALBDEPLOY);
+                }
 
                 //Write final output configurations (pulling forward from static web nested stacks)
                 const endPointURLParamsOutput = new cdk.CfnOutput(
