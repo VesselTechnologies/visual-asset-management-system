@@ -348,6 +348,3 @@ Combined.pem
 #Kiro Misc
 .kiro/specs/*
 .kiro/settings/*
-
-#Our stuff
-scripts/

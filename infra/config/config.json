@@ -1,8 +1,8 @@
 {
     "name": "vams",
     "env": {
-        "account": null,
-        "region": null,
+        "account": "718905963256",
+        "region": "us-east-1",
         "loadContextIgnoreVPCStacks": false
     },
     "app": {
@@ -13,7 +13,7 @@
             "externalAssetBuckets": null
         },
         "adminUserId": "administrator",
-        "adminEmailAddress": "admin@example.com",
+        "adminEmailAddress": "marksoulier@vessel-technologies.com",
         "useFips": false,
         "useWaf": true,
         "addStackCloudTrailLogs": true,
@@ -26,7 +26,7 @@
             "il6Compliant": false
         },
         "useGlobalVpc": {
-            "enabled": false,
+            "enabled": true,
             "useForAllLambdas": false,
             "addVpcEndpoints": true,
             "optionalExternalVpcId": null,
@@ -37,7 +37,7 @@
         },
         "openSearch": {
             "useServerless": {
-                "enabled": true
+                "enabled": false
             },
             "useProvisioned": {
                 "enabled": false,
@@ -48,7 +48,7 @@
             "reindexOnCdkDeploy": false
         },
         "useLocationService": {
-            "enabled": true
+            "enabled": false
         },
         "useAlb": {
             "enabled": false,
@@ -125,8 +125,8 @@
                 "autoRegisterWithVAMS": true
             },
             "useIsaacLabTraining": {
-                "enabled": false,
-                "acceptNvidiaEula": false,
+                "enabled": true,
+                "acceptNvidiaEula": true,
                 "autoRegisterWithVAMS": true,
                 "keepWarmInstance": false
             }
