@@ -593,9 +593,15 @@ EOF
 # -----------------------------
 echo "Importing constraint template for ${ADMIN_ROLE_NAME}..."
 vamscli role constraint template import -j "$ADMIN_TEMPLATE_FILE"
+rm "$ADMIN_TEMPLATE_FILE"
+
 echo "Importing constraint template for ${USER_ROLE_NAME}..."
 vamscli role constraint template import -j "$USER_TEMPLATE_FILE"
+rm "$USER_TEMPLATE_FILE"
+
+
 echo "Importing constraint template for ${READ_ONLY_ROLE_NAME}..."
 vamscli role constraint template import -j "$READ_ONLY_TEMPLATE_FILE"
+rm "$READ_ONLY_TEMPLATE_FILE"
 
 echo "Done."

@@ -155,18 +155,10 @@ export default function CognitoUsers() {
                         allItems={allItems}
                         loading={loading}
                         listDefinition={CognitoUsersListDefinition}
-                        editEnabled={true}
+                        editEnabled={false}
                         setReload={setReload}
                         onReload={reloadData}
-                        UpdateSelectedElement={CreateCognitoUser}
-                        customHeaderActions={
-                            <Button
-                                disabled={selectedItems.length !== 1}
-                                onClick={() => setResetPasswordOpen(true)}
-                            >
-                                Reset Password
-                            </Button>
-                        }
+                        hideDeleteButton={true}
                         onSelectionChange={(items: any[]) => setSelectedItems(items)}
                         createNewElement={
                             <div style={{ float: "right" }}>

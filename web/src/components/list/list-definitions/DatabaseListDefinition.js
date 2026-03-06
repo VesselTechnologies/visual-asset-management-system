@@ -16,11 +16,7 @@ export const DatabaseListDefinition = new ListDefinition({
     visibleColumns: [
         "databaseId",
         "description",
-        "bucketName",
-        "baseAssetsPrefix",
         "assetCount",
-        "restrictMetadataOutsideSchemas",
-        "restrictFileUploadsToExtensions",
     ],
     filterColumns: [
         { name: "databaseId", placeholder: "Name" },

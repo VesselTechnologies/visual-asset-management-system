@@ -97,16 +97,34 @@ const LandingPage = () => {
                                     How it works
                                 </Box>
                                 <Container>
-                                    <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden" }}>
-                                        <iframe
-                                            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
-                                            src="https://www.youtube.com/embed/kgaO45SyaO4?si=RYnke9Lxqr4-fJZM"
-                                            title="YouTube video player"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                            referrerPolicy="strict-origin-when-cross-origin"
-                                            allowFullScreen
+                                    <a
+                                        href="https://www.youtube.com/watch?v=kgaO45SyaO4"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ display: "block", position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", cursor: "pointer" }}
+                                    >
+                                        <img
+                                            src="https://img.youtube.com/vi/kgaO45SyaO4/maxresdefault.jpg"
+                                            alt="Watch on YouTube"
+                                            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
                                         />
-                                    </div>
+                                        {/* Play button overlay */}
+                                        <div style={{
+                                            position: "absolute", top: "50%", left: "50%",
+                                            transform: "translate(-50%, -50%)",
+                                            width: 72, height: 72, borderRadius: "50%",
+                                            backgroundColor: "rgba(0,0,0,0.7)",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                        }}>
+                                            <div style={{
+                                                width: 0, height: 0,
+                                                borderTop: "14px solid transparent",
+                                                borderBottom: "14px solid transparent",
+                                                borderLeft: "24px solid white",
+                                                marginLeft: 5,
+                                            }} />
+                                        </div>
+                                    </a>
                                 </Container>
                             </div>
 
