@@ -97,12 +97,12 @@ export function Navigation({
                 },
                 ...(!window.DISABLE_COGNITO
                     ? [
-                          {
-                              type: "link",
-                              text: "Cognito User Management",
-                              href: "#/auth/cognitousers/",
-                          },
-                      ]
+                        {
+                            type: "link",
+                            text: "User Management",
+                            href: "#/auth/cognitousers/",
+                        },
+                    ]
                     : []),
                 {
                     type: "link",

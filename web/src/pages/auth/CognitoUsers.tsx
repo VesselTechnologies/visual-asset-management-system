@@ -13,15 +13,14 @@ import { Box, Button, Grid, SpaceBetween, TextContent } from "@cloudscape-design
 import TableList from "../../components/list/TableList";
 
 export const CognitoUsersListDefinition = new ListDefinition({
-    pluralName: "Cognito User Management",
-    pluralNameTitleCase: "Cognito User Management",
-    singularNameTitleCase: "Cognito User",
+    pluralName: "Users",
+    pluralNameTitleCase: "Users",
+    singularNameTitleCase: "User",
     visibleColumns: [
         "userId",
         "email",
         "phone",
         "userStatus",
-        "mfaEnabled",
         "userCreateDate",
         "userLastModifiedDate",
     ],
@@ -146,7 +145,7 @@ export default function CognitoUsers() {
                 <Grid gridDefinition={[{ colspan: 6 }]}>
                     <div>
                         <TextContent>
-                            <h1>Cognito User Management</h1>
+                            <h1>User Management</h1>
                         </TextContent>
                     </div>
                 </Grid>
@@ -168,7 +167,7 @@ export default function CognitoUsers() {
                                         variant="primary"
                                         data-testid="create-new-element-button"
                                     >
-                                        Create Cognito User
+                                        Create New User
                                     </Button>
                                 </SpaceBetween>
                             </div>

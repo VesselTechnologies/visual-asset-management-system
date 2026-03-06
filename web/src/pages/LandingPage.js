@@ -94,7 +94,7 @@ const LandingPage = () => {
                         <SpaceBetween size="l">
                             <div>
                                 <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
-                                    How it works
+                                    Getting Started
                                 </Box>
                                 <Container>
                                     <a

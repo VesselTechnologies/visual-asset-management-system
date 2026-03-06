@@ -193,7 +193,7 @@ export default function CreateCognitoUser({
                 setFormError("");
             }}
             size="large"
-            header={`${createOrUpdate} Cognito User`}
+            header={`${createOrUpdate} User`}
             footer={
                 <Box float="right">
                     <SpaceBetween direction="horizontal" size="xs">
@@ -221,7 +221,7 @@ export default function CreateCognitoUser({
                             disabled={inProgress || !isFormValid()}
                             data-testid={`${createOrUpdate}-cognito-user-button`}
                         >
-                            {createOrUpdate} Cognito User
+                            {createOrUpdate} User
                         </Button>
                     </SpaceBetween>
                 </Box>

@@ -138,7 +138,7 @@ export default function TableList(props) {
                                 value !== undefined &&
                                 value !== null &&
                                 value.toString().toLowerCase().indexOf(filteringTextLowerCase) !==
-                                    -1
+                                -1
                             ) {
                                 return true;
                             }
@@ -260,7 +260,7 @@ export default function TableList(props) {
                 itemNames[i] = selectedItems[i]?.workflowId || "unknown";
             }
         }
-        if (pluralName === "Cognito User Management") {
+        if (pluralName === "Users") {
             for (let i = 0; i < length; i++) {
                 itemNames[i] = selectedItems[i]?.userId || "unknown";
             }
@@ -428,7 +428,7 @@ export default function TableList(props) {
                                         pluralName !== "tags" &&
                                         pluralName !== "Subscriptions" &&
                                         pluralName !== "User Roles" &&
-                                        pluralName !== "Cognito User Management"
+                                        pluralName !== "Users"
                                     )
                                         return (
                                             <Select
@@ -437,9 +437,9 @@ export default function TableList(props) {
                                                     !selectedValue
                                                         ? null
                                                         : {
-                                                              label: selectedValue,
-                                                              value: selectedValue,
-                                                          }
+                                                            label: selectedValue,
+                                                            value: selectedValue,
+                                                        }
                                                 }
                                                 onChange={({ detail }) => {
                                                     handleFilterSelected(
