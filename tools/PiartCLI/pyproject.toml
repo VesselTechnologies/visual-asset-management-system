@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "piart"
+version = "0.1.0"
+description = "Wrapper CLI for VamsCLI that exposes repo/repos terminology"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+dependencies = [
+    "python-dotenv>=1.0.0"
+    # vamscli must be installed separately (pip install -e ../VamsCLI)
+]
+
+[project.scripts]
+piart = "piart.main:main"
+
+[tool.setuptools.packages.find]
+include = ["piart*"]
