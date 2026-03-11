@@ -14,6 +14,7 @@ from ..constants import (
     API_ARCHIVE_ASSET, API_DELETE_ASSET, API_DOWNLOAD_ASSET, API_ASSET_EXPORT, API_DATABASE, API_DATABASE_BY_ID, API_BUCKETS,
     API_TAGS, API_TAG_DELETE, API_TAG_TYPES, API_TAG_TYPE_DELETE,
     API_CREATE_ASSET_VERSION, API_REVERT_ASSET_VERSION, API_GET_ASSET_VERSIONS, API_GET_ASSET_VERSION,
+    API_ASSET_VERSION_BY_ID, API_ASSET_VERSION_ARCHIVE, API_ASSET_VERSION_UNARCHIVE,
     API_ASSET_LINKS, API_ASSET_LINKS_SINGLE, API_ASSET_LINKS_UPDATE, API_ASSET_LINKS_DELETE, API_ASSET_LINKS_FOR_ASSET,
     API_ASSET_LINKS_METADATA, API_ASSET_LINKS_METADATA_KEY, API_METADATA, API_METADATA_SCHEMA,
     API_METADATA_SCHEMA_LIST, API_METADATA_SCHEMA_BY_ID,
@@ -30,7 +31,7 @@ from .exceptions import (
     AssetAlreadyArchivedError, AssetDeletionError, TagNotFoundError, TagAlreadyExistsError,
     TagTypeNotFoundError, TagTypeAlreadyExistsError, TagTypeInUseError, 
     InvalidTagDataError, InvalidTagTypeDataError, AssetVersionError, AssetVersionNotFoundError,
-    AssetVersionOperationError, InvalidAssetVersionDataError, AssetVersionRevertError,
+    AssetVersionOperationError, InvalidAssetVersionDataError, AssetVersionRevertError, AssetVersionArchiveError,
     AssetLinkError, AssetLinkNotFoundError, AssetLinkValidationError, AssetLinkPermissionError,
     CycleDetectionError, AssetLinkAlreadyExistsError, InvalidRelationshipTypeError, AssetLinkOperationError,
     RateLimitExceededError, RetryExhaustedError
@@ -2003,6 +2004,167 @@ class APIClient:
         except Exception as e:
             raise APIError(f"Failed to get asset version: {e}")
 
+    def update_asset_version(self, database_id: str, asset_id: str, asset_version_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Update an asset version using the PUT /database/{databaseId}/assets/{assetId}/assetversions/{assetVersionId} endpoint.
+
+        Args:
+            database_id: Database ID
+            asset_id: Asset ID
+            asset_version_id: Asset version ID to update
+            data: Update data (comment, versionAlias)
+
+        Returns:
+            API response data with update result
+
+        Raises:
+            AssetNotFoundError: When asset is not found
+            AssetVersionNotFoundError: When version is not found
+            DatabaseNotFoundError: When database doesn't exist
+            InvalidAssetVersionDataError: When update data is invalid
+            AssetVersionOperationError: When update operation fails
+            APIError: When API call fails
+        """
+        try:
+            endpoint = API_ASSET_VERSION_BY_ID.format(
+                databaseId=database_id,
+                assetId=asset_id,
+                assetVersionId=asset_version_id
+            )
+            response = self.put(endpoint, data=data, include_auth=True)
+            return response.json()
+
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 400:
+                error_data = e.response.json() if e.response.content else {}
+                error_message = error_data.get('message', str(e))
+                raise InvalidAssetVersionDataError(f"Invalid update data: {error_message}")
+
+            elif e.response.status_code == 404:
+                error_data = e.response.json() if e.response.content else {}
+                error_message = error_data.get('message', str(e))
+
+                if 'database' in error_message.lower():
+                    raise DatabaseNotFoundError(f"Database '{database_id}' not found")
+                elif 'version' in error_message.lower():
+                    raise AssetVersionNotFoundError(f"Asset version '{asset_version_id}' not found")
+                else:
+                    raise AssetNotFoundError(f"Asset '{asset_id}' not found in database '{database_id}'")
+
+            elif e.response.status_code in [401, 403]:
+                raise AuthenticationError(f"Authentication failed: {e}")
+            else:
+                raise AssetVersionOperationError(f"Asset version update failed: {e}")
+
+        except Exception as e:
+            raise APIError(f"Failed to update asset version: {e}")
+
+    def archive_asset_version(self, database_id: str, asset_id: str, asset_version_id: str) -> Dict[str, Any]:
+        """
+        Archive an asset version using the POST /database/{databaseId}/assets/{assetId}/assetversions/{assetVersionId}/archive endpoint.
+
+        Args:
+            database_id: Database ID
+            asset_id: Asset ID
+            asset_version_id: Asset version ID to archive
+
+        Returns:
+            API response data with archive result
+
+        Raises:
+            AssetNotFoundError: When asset is not found
+            AssetVersionNotFoundError: When version is not found
+            DatabaseNotFoundError: When database doesn't exist
+            AssetVersionArchiveError: When archive operation fails
+            APIError: When API call fails
+        """
+        try:
+            endpoint = API_ASSET_VERSION_ARCHIVE.format(
+                databaseId=database_id,
+                assetId=asset_id,
+                assetVersionId=asset_version_id
+            )
+            response = self.post(endpoint, include_auth=True)
+            return response.json()
+
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 400:
+                error_data = e.response.json() if e.response.content else {}
+                error_message = error_data.get('message', str(e))
+                raise AssetVersionArchiveError(f"Archive failed: {error_message}")
+
+            elif e.response.status_code == 404:
+                error_data = e.response.json() if e.response.content else {}
+                error_message = error_data.get('message', str(e))
+
+                if 'database' in error_message.lower():
+                    raise DatabaseNotFoundError(f"Database '{database_id}' not found")
+                elif 'version' in error_message.lower():
+                    raise AssetVersionNotFoundError(f"Asset version '{asset_version_id}' not found")
+                else:
+                    raise AssetNotFoundError(f"Asset '{asset_id}' not found in database '{database_id}'")
+
+            elif e.response.status_code in [401, 403]:
+                raise AuthenticationError(f"Authentication failed: {e}")
+            else:
+                raise AssetVersionArchiveError(f"Asset version archive failed: {e}")
+
+        except Exception as e:
+            raise APIError(f"Failed to archive asset version: {e}")
+
+    def unarchive_asset_version(self, database_id: str, asset_id: str, asset_version_id: str) -> Dict[str, Any]:
+        """
+        Unarchive an asset version using the POST /database/{databaseId}/assets/{assetId}/assetversions/{assetVersionId}/unarchive endpoint.
+
+        Args:
+            database_id: Database ID
+            asset_id: Asset ID
+            asset_version_id: Asset version ID to unarchive
+
+        Returns:
+            API response data with unarchive result
+
+        Raises:
+            AssetNotFoundError: When asset is not found
+            AssetVersionNotFoundError: When version is not found
+            DatabaseNotFoundError: When database doesn't exist
+            AssetVersionArchiveError: When unarchive operation fails
+            APIError: When API call fails
+        """
+        try:
+            endpoint = API_ASSET_VERSION_UNARCHIVE.format(
+                databaseId=database_id,
+                assetId=asset_id,
+                assetVersionId=asset_version_id
+            )
+            response = self.post(endpoint, include_auth=True)
+            return response.json()
+
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 400:
+                error_data = e.response.json() if e.response.content else {}
+                error_message = error_data.get('message', str(e))
+                raise AssetVersionArchiveError(f"Unarchive failed: {error_message}")
+
+            elif e.response.status_code == 404:
+                error_data = e.response.json() if e.response.content else {}
+                error_message = error_data.get('message', str(e))
+
+                if 'database' in error_message.lower():
+                    raise DatabaseNotFoundError(f"Database '{database_id}' not found")
+                elif 'version' in error_message.lower():
+                    raise AssetVersionNotFoundError(f"Asset version '{asset_version_id}' not found")
+                else:
+                    raise AssetNotFoundError(f"Asset '{asset_id}' not found in database '{database_id}'")
+
+            elif e.response.status_code in [401, 403]:
+                raise AuthenticationError(f"Authentication failed: {e}")
+            else:
+                raise AssetVersionArchiveError(f"Asset version unarchive failed: {e}")
+
+        except Exception as e:
+            raise APIError(f"Failed to unarchive asset version: {e}")
+
     # Asset Links API Methods
 
     def create_asset_link(self, link_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -2211,19 +2373,20 @@ class APIClient:
 
     # Unified Metadata API Methods (v2.2+)
 
-    def get_asset_metadata_v2(self, database_id: str, asset_id: str, page_size: int = 3000, starting_token: str = None) -> Dict[str, Any]:
+    def get_asset_metadata_v2(self, database_id: str, asset_id: str, page_size: int = 3000, starting_token: str = None, asset_version_id: str = None) -> Dict[str, Any]:
         """
         Get metadata for an asset using the new unified API.
-        
+
         Args:
             database_id: Database ID
             asset_id: Asset ID
             page_size: Page size for pagination (default: 3000)
             starting_token: Token for pagination
-        
+            asset_version_id: Optional asset version ID to retrieve metadata snapshot
+
         Returns:
             API response with metadata list and optional NextToken
-        
+
         Raises:
             AssetNotFoundError: When asset is not found
             DatabaseNotFoundError: When database doesn't exist
@@ -2235,6 +2398,8 @@ class APIClient:
             params = {'pageSize': page_size}
             if starting_token:
                 params['startingToken'] = starting_token
+            if asset_version_id:
+                params['assetVersionId'] = asset_version_id
                 
             response = self.get(endpoint, include_auth=True, params=params)
             return response.json()
@@ -2353,11 +2518,11 @@ class APIClient:
         except Exception as e:
             raise APIError(f"Failed to delete asset metadata: {e}")
 
-    def get_file_metadata_v2(self, database_id: str, asset_id: str, file_path: str, metadata_type: str = 'metadata', 
-                            page_size: int = 3000, starting_token: str = None) -> Dict[str, Any]:
+    def get_file_metadata_v2(self, database_id: str, asset_id: str, file_path: str, metadata_type: str = 'metadata',
+                            page_size: int = 3000, starting_token: str = None, asset_version_id: str = None) -> Dict[str, Any]:
         """
         Get metadata or attributes for a file using the new unified API.
-        
+
         Args:
             database_id: Database ID
             asset_id: Asset ID
@@ -2365,10 +2530,11 @@ class APIClient:
             metadata_type: 'metadata' or 'attribute'
             page_size: Page size for pagination (default: 3000)
             starting_token: Token for pagination
-        
+            asset_version_id: Optional asset version ID to retrieve metadata snapshot
+
         Returns:
             API response with metadata list and optional NextToken
-        
+
         Raises:
             AssetNotFoundError: When asset is not found
             DatabaseNotFoundError: When database doesn't exist
@@ -2384,6 +2550,8 @@ class APIClient:
             }
             if starting_token:
                 params['startingToken'] = starting_token
+            if asset_version_id:
+                params['assetVersionId'] = asset_version_id
                 
             response = self.get(endpoint, include_auth=True, params=params)
             return response.json()
@@ -2922,19 +3090,22 @@ class APIClient:
 
     # Asset Download API Methods
 
-    def download_asset_file(self, database_id: str, asset_id: str, file_key: Optional[str] = None, version_id: Optional[str] = None) -> Dict[str, Any]:
+    def download_asset_file(self, database_id: str, asset_id: str, file_key: Optional[str] = None, version_id: Optional[str] = None,
+                            asset_version_id: Optional[str] = None, asset_version_alias: Optional[str] = None) -> Dict[str, Any]:
         """
         Generate presigned URL for downloading asset files using the /database/{databaseId}/assets/{assetId}/download POST endpoint.
-        
+
         Args:
             database_id: Database ID
             asset_id: Asset ID
             file_key: Optional specific file key to download
             version_id: Optional version ID for specific version
-        
+            asset_version_id: Optional asset version ID to download files from a specific asset version
+            asset_version_alias: Optional asset version alias to download files from a specific asset version by alias
+
         Returns:
             API response data with download URL and metadata
-        
+
         Raises:
             AssetNotFoundError: When asset is not found
             DatabaseNotFoundError: When database doesn't exist
@@ -2949,6 +3120,10 @@ class APIClient:
                 data["key"] = file_key
             if version_id:
                 data["versionId"] = version_id
+            if asset_version_id:
+                data["assetVersionId"] = asset_version_id
+            if asset_version_alias:
+                data["assetVersionIdAlias"] = asset_version_alias
                 
             response = self.post(endpoint, data=data, include_auth=True)
             return response.json()

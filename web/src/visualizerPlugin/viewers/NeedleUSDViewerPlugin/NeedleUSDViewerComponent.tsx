@@ -20,6 +20,7 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
     assetKey,
     multiFileKeys,
     versionId,
+    assetVersionId,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [config] = useState(Cache.getItem("config"));
@@ -168,12 +169,12 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
                     const highlightMaterial = baseMaterial.clone
                         ? baseMaterial.clone()
                         : new THREE.MeshStandardMaterial({
-                              color: baseMaterial.color,
-                              metalness: baseMaterial.metalness || 0.5,
-                              roughness: baseMaterial.roughness || 0.5,
-                              opacity: baseMaterial.opacity || 1.0,
-                              transparent: baseMaterial.transparent || false,
-                          });
+                            color: baseMaterial.color,
+                            metalness: baseMaterial.metalness || 0.5,
+                            roughness: baseMaterial.roughness || 0.5,
+                            opacity: baseMaterial.opacity || 1.0,
+                            transparent: baseMaterial.transparent || false,
+                        });
                     highlightMaterial.emissive = new THREE.Color(0x4caf50);
                     highlightMaterial.emissiveIntensity = 0.5;
                     obj.material = highlightMaterial;
@@ -215,9 +216,9 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
                                 } else {
                                     files.push(fullPath);
                                 }
-                            } catch {}
+                            } catch { }
                         }
-                    } catch {}
+                    } catch { }
                     return files;
                 };
 
@@ -231,14 +232,14 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
                             files.forEach((f) => {
                                 try {
                                     USD.FS_unlink(f);
-                                } catch {}
+                                } catch { }
                             });
                             // Remove empty directories recursively
                             try {
                                 USD.FS_rmdir(dirPath);
-                            } catch {}
+                            } catch { }
                         }
-                    } catch {}
+                    } catch { }
                 }
                 console.log("WASM filesystem cleaned");
             } catch (error) {
@@ -744,9 +745,10 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
                 const encodedFileKey = encodedSegments.join("/");
                 let assetUrl = `${config.api}database/${databaseId}/assets/${assetId}/download/stream/${encodedFileKey}`;
 
-                // Add versionId query parameter for single file mode
-                if (isSingleFile && versionId) {
-                    assetUrl += `?versionId=${encodeURIComponent(versionId)}`;
+                // Only pass assetVersionId if provided — don't pass versionId to avoid
+                // interfering with internal dependency resolution for multi-file assets
+                if (assetVersionId) {
+                    assetUrl += `?assetVersionId=${encodeURIComponent(assetVersionId)}`;
                 }
 
                 const response = await fetch(assetUrl, {
@@ -937,11 +939,11 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
                 if (typeof SharedArrayBuffer === "undefined") {
                     throw new Error(
                         "WebAssembly (WASM) Support Not Available.\n\n" +
-                            "The Needle USD viewer requires WebAssembly with SharedArrayBuffer support, which is not currently available. This may be due to:\n\n" +
-                            "• Missing or incorrect web server headers (Cross-Origin-Embedder-Policy and Cross-Origin-Opener-Policy).\n" +
-                            "• Browser restrictions or unsupported browser version.\n" +
-                            "• Safari browser limitations (does not support required 'credentialless' policy).\n\n" +
-                            "Please contact your system administrator to enable WASM support or try a different browser (Chrome, Firefox, or Edge recommended)."
+                        "The Needle USD viewer requires WebAssembly with SharedArrayBuffer support, which is not currently available. This may be due to:\n\n" +
+                        "• Missing or incorrect web server headers (Cross-Origin-Embedder-Policy and Cross-Origin-Opener-Policy).\n" +
+                        "• Browser restrictions or unsupported browser version.\n" +
+                        "• Safari browser limitations (does not support required 'credentialless' policy).\n\n" +
+                        "Please contact your system administrator to enable WASM support or try a different browser (Chrome, Firefox, or Edge recommended)."
                     );
                 }
 
@@ -1115,8 +1117,8 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
                     multiFileKeys && multiFileKeys.length > 0
                         ? multiFileKeys
                         : assetKey
-                        ? [assetKey]
-                        : [];
+                            ? [assetKey]
+                            : [];
                 if (filesToLoad.length === 0) throw new Error("No files specified");
 
                 const authHeader = await getDualAuthorizationHeader();
@@ -1460,7 +1462,7 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
                     }
 
                     //Wait until we deleted the old driver
-                    while (!oldDriver.isDeleted) {}
+                    while (!oldDriver.isDeleted) { }
 
                     renderInterface = new ThreeRenderDelegateInterface(delegateConfig);
                     driver = new USD.HdWebSyncDriver(
@@ -1792,7 +1794,7 @@ const NeedleUSDViewerComponent: React.FC<ViewerPluginProps> = ({
             NeedleUSDDependencyManager.cleanup();
             console.log("NeedleUSD Viewer: Cleanup complete");
         };
-    }, [assetKey, multiFileKeys, assetId, databaseId, versionId, config]);
+    }, [assetKey, multiFileKeys, assetId, databaseId, versionId, assetVersionId, config]);
 
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent) => {
