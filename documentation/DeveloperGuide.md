@@ -547,54 +547,216 @@ Infrastructure Note (Hash Router): The hash router was chosen in order so suppor
 
 The front end when loading the page receives a configuration from the AWS backend to include amplify storage bucket, API Gateway/Cloudfront endpoints, authentication endpoints, and features enabled. Some of these are retrieved on load pre-authentication while others are received post-authentication. Features enabled is a comma-deliminated list of infrastructure features that were enabled/disabled on CDK deployment through the `config.json` file and toggle different front-end features to view.
 
+#### Download and Stream APIs — File Version Resolution
+
+VAMS provides two APIs for accessing asset files: a **Download API** (returns a presigned S3 URL) and a **Stream API** (proxies the file content directly). Both support version-aware file access.
+
+##### API Endpoints
+
+| API           | Method | Path                                                                | Purpose                        |
+| ------------- | ------ | ------------------------------------------------------------------- | ------------------------------ |
+| Download      | POST   | `/database/{databaseId}/assets/{assetId}/download`                  | Returns a presigned S3 URL     |
+| Stream        | GET    | `/database/{databaseId}/assets/{assetId}/download/stream/{fileKey}` | Proxies file content with auth |
+| Stream (HEAD) | HEAD   | `/database/{databaseId}/assets/{assetId}/download/stream/{fileKey}` | Returns file metadata headers  |
+
+##### Version Parameters
+
+Both APIs accept **one** version parameter (mutually exclusive):
+
+| Parameter             | Download API | Stream API  | Description                                                          |
+| --------------------- | ------------ | ----------- | -------------------------------------------------------------------- |
+| `assetVersionId`      | Request body | Query param | Resolves the file's S3 version from the asset version snapshot       |
+| `assetVersionIdAlias` | Request body | Query param | Resolves via a version alias (e.g., "RC1") to an asset version ID    |
+| `versionId`           | Request body | Query param | Direct S3 version ID (low-level, not recommended for most use cases) |
+| _(none)_              | —            | —           | Returns the latest version of the file                               |
+
+##### Recommended Usage
+
+**Use `assetVersionId` or no version parameter.** These are the recommended approaches for all consumers (frontend viewers, CLI, external integrations):
+
+```
+# Download the LATEST version of a file (no version parameter)
+POST /database/{db}/assets/{asset}/download
+{ "downloadType": "assetFile", "key": "/model.glb" }
+
+# Download a file as it existed in asset version 3
+POST /database/{db}/assets/{asset}/download
+{ "downloadType": "assetFile", "key": "/model.glb", "assetVersionId": "3" }
+
+# Stream the LATEST version of a file
+GET /database/{db}/assets/{asset}/download/stream/model.glb
+
+# Stream a file as it existed in asset version 3
+GET /database/{db}/assets/{asset}/download/stream/model.glb?assetVersionId=3
+```
+
+**Why `assetVersionId` is preferred over `versionId`:**
+
+-   `assetVersionId` lets the backend resolve the correct S3 file version from the asset version's file snapshot — the caller doesn't need to know the raw S3 version ID
+-   It works for **dependency resolution** — when a 3D viewer needs to load a main file plus its dependencies (textures, materials, etc.), passing `assetVersionId` ensures all files are resolved from the same version snapshot, maintaining consistency
+-   The raw S3 `versionId` is an opaque string that only makes sense if the caller has already looked up the specific file version — this couples the caller to the S3 version history
+
+##### Dependency File Resolution
+
+Multi-file 3D assets (e.g., GLTF with separate `.bin` and texture files) require loading dependency files alongside the main file. When using `assetVersionId`, dependency files are automatically resolved from the same version snapshot:
+
+```
+# Main file — loads from asset version 3
+GET /stream/model.gltf?assetVersionId=3
+
+# Dependency file — also resolved from asset version 3's snapshot
+GET /stream/textures/diffuse.png?assetVersionId=3
+
+# Without any version parameter — both load the latest version
+GET /stream/model.gltf
+GET /stream/textures/diffuse.png
+```
+
+This ensures that the main file and its dependencies are always from the same version, avoiding mismatches where a texture from a newer version is paired with a model from an older version.
+
+##### Error Responses
+
+| Scenario                         | Status | Message                                                                          |
+| -------------------------------- | ------ | -------------------------------------------------------------------------------- |
+| Multiple version params provided | 400    | "Only one of versionId, assetVersionId, or assetVersionIdAlias can be specified" |
+| Asset version not found          | 404    | "Asset version 'X' not found for asset"                                          |
+| File not in version snapshot     | 404    | "File not found in asset version 'X'"                                            |
+| Alias not found                  | 404    | "No asset version found with alias 'X'"                                          |
+| Ambiguous alias                  | 400    | "Ambiguous alias 'X': multiple versions share this alias"                        |
+
+##### File Version History API
+
+The file info endpoint returns S3 version history enriched with asset version mapping:
+
+```
+GET /database/{db}/assets/{asset}/fileInfo?filePath=/model.glb&includeVersions=true
+```
+
+Each version in the response includes an `assetVersionIds` array showing which asset versions contain that specific S3 file version:
+
+```json
+{
+    "versions": [
+        {
+            "versionId": "abc123",
+            "isLatest": true,
+            "assetVersionIds": [{ "id": "3", "label": "v3 (RC1)" }]
+        },
+        {
+            "versionId": "def456",
+            "isLatest": false,
+            "assetVersionIds": [
+                { "id": "1", "label": "v1" },
+                { "id": "2", "label": "v2" }
+            ]
+        }
+    ]
+}
+```
+
+Archived asset versions are excluded from the `assetVersionIds` list. Each entry includes an `id` (the raw asset version ID) and a `label` (display string with version prefix and optional alias).
+
 #### 3D Asset Types Supported for In-Browser Viewing
 
 VAMS currently integrates with several different asset viewers and supports the following formats for viewing 3D assets interactively.
 
-| Name                              | Extension | Type   | Viewer             | Excluded Library | Notes                                                                                        |
-| :-------------------------------- | :-------- | :----- | :----------------- | :--------------- | -------------------------------------------------------------------------------------------- |
-| Wavefront                         | obj       | text   | Online 3D Viewer   |                  |                                                                                              |
-| 3D Studio                         | 3ds       | binary | Online 3D Viewer   |                  |                                                                                              |
-| Stereolithography                 | stl       | text   | Online 3D Viewer   |                  |                                                                                              |
-| Stereolithography                 | stl       | binary | Online 3D Viewer   |                  |                                                                                              |
-| glTF                              | gltf      | text   | Online 3D Viewer   |                  |                                                                                              |
-| glTF                              | glb       | binary | Online 3D Viewer   |                  |                                                                                              |
-| Object File Format                | off       | text   | Online 3D Viewer   |                  |                                                                                              |
-| Object File Format                | off       | binary | Online 3D Viewer   |                  |                                                                                              |
-| Dotbim                            | bim       | text   | Online 3D Viewer   |                  |                                                                                              |
-| Rhinoceros 3D                     | 3dm       | binary | Online 3D Viewer   |                  |                                                                                              |
-| Filmbox                           | fbx       | text   | Online 3D Viewer   |                  |                                                                                              |
-| Filmbox                           | fbx       | binary | Online 3D Viewer   |                  |                                                                                              |
-| Collada                           | dae       | text   | Online 3D Viewer   |                  |                                                                                              |
-| Virtual Reality Modeling Language | wrl       | text   | Online 3D Viewer   |                  |                                                                                              |
-| 3D Manufacturing Format           | 3mf       | text   | Online 3D Viewer   |                  |                                                                                              |
-| Additive Manufacturing            | amf       | text   | Online 3D Viewer   |                  |                                                                                              |
-| (Excluded\*) Dotbim               | ifc       | text   | Online 3D Viewer\* | web-ifc          |                                                                                              |
-| (Excluded\*) FreeCad              | fcstd     | text   | Online 3D Viewer\* | occt-import-js   |                                                                                              |
-| (Excluded\*) Boundary Rep         | brep      | text   | Online 3D Viewer\* | occt-import-js   |                                                                                              |
-| (Excluded\*) ISO 10303 CAD        | step      | text   | Online 3D Viewer\* | occt-import-js   |                                                                                              |
-| (Excluded\*) Graphics Exchange    | iges      | text   | Online 3D Viewer\* | occt-import-js   |                                                                                              |
-| Point Cloud - LiDAR Data Exchange | laz       | binary | Potree Viewer      |                  |                                                                                              |
-| Point Cloud - LiDAR Data Exchange | las       | binary | Potree Viewer      |                  |                                                                                              |
-| Point Cloud - LiDAR Data Exchange | e57       | binary | Potree Viewer      |                  |                                                                                              |
-| Polygon File Format               | ply       | binary | Potree Viewer      |                  | Type stores meshes and point clouds - VAMS currently showing only point cloud viewer for PLY |
-| Polygon File Format               | ply       | text   | Potree Viewer      |                  |                                                                                              |
+| Name                              | Extension | Type   | Viewer            | Excluded Library | Notes                                                                           |
+| :-------------------------------- | :-------- | :----- | :---------------- | :--------------- | ------------------------------------------------------------------------------- |
+| glTF                              | gltf      | text   | Three.js Viewer   |                  |                                                                                 |
+| glTF                              | glb       | binary | Three.js Viewer   |                  |                                                                                 |
+| Wavefront                         | obj       | text   | Three.js Viewer   |                  |                                                                                 |
+| Filmbox                           | fbx       | text   | Three.js Viewer   |                  |                                                                                 |
+| Filmbox                           | fbx       | binary | Three.js Viewer   |                  |                                                                                 |
+| Stereolithography                 | stl       | text   | Three.js Viewer   |                  |                                                                                 |
+| Stereolithography                 | stl       | binary | Three.js Viewer   |                  |                                                                                 |
+| Polygon File Format               | ply       | text   | Three.js Viewer   |                  |                                                                                 |
+| Polygon File Format               | ply       | binary | Three.js Viewer   |                  |                                                                                 |
+| Collada                           | dae       | text   | Three.js Viewer   |                  |                                                                                 |
+| 3D Studio                         | 3ds       | binary | Three.js Viewer   |                  |                                                                                 |
+| 3D Manufacturing Format           | 3mf       | text   | Three.js Viewer   |                  |                                                                                 |
+| ISO 10303 CAD (Optional\*)        | stp       | text   | Three.js Viewer   | opencascade.js\* | Requires optional OCCT library (LGPL-2.1)                                       |
+| ISO 10303 CAD (Optional\*)        | step      | text   | Three.js Viewer   | opencascade.js\* | Requires optional OCCT library (LGPL-2.1)                                       |
+| Graphics Exchange (Optional\*)    | iges      | text   | Three.js Viewer   | opencascade.js\* | Requires optional OCCT library (LGPL-2.1)                                       |
+| Boundary Rep (Optional\*)         | brep      | text   | Three.js Viewer   | opencascade.js\* | Requires optional OCCT library (LGPL-2.1)                                       |
+| Universal Scene Description       | usd       | text   | Needle USD Viewer |                  |                                                                                 |
+| Universal Scene Description       | usda      | text   | Needle USD Viewer |                  |                                                                                 |
+| Universal Scene Description       | usdc      | binary | Needle USD Viewer |                  |                                                                                 |
+| Universal Scene Description       | usdz      | binary | Needle USD Viewer |                  |                                                                                 |
+| Rhinoceros 3D                     | 3dm       | binary | Online 3D Viewer  |                  | Online 3D Viewer now handles only specialized formats not supported by Three.js |
+| Additive Manufacturing            | amf       | text   | Online 3D Viewer  |                  | Online 3D Viewer now handles only specialized formats not supported by Three.js |
+| Dotbim                            | bim       | text   | Online 3D Viewer  |                  | Online 3D Viewer now handles only specialized formats not supported by Three.js |
+| Object File Format                | off       | text   | Online 3D Viewer  |                  | Online 3D Viewer now handles only specialized formats not supported by Three.js |
+| Object File Format                | off       | binary | Online 3D Viewer  |                  | Online 3D Viewer now handles only specialized formats not supported by Three.js |
+| Virtual Reality Modeling Language | wrl       | text   | Online 3D Viewer  |                  | Online 3D Viewer now handles only specialized formats not supported by Three.js |
+| Point Cloud - LiDAR Data Exchange | laz       | binary | Potree Viewer     |                  | Requires Potree pipeline preprocessing                                          |
+| Point Cloud - LiDAR Data Exchange | las       | binary | Potree Viewer     |                  | Requires Potree pipeline preprocessing                                          |
+| Point Cloud - LiDAR Data Exchange | e57       | binary | Potree Viewer     |                  | Requires Potree pipeline preprocessing                                          |
+| Point Cloud - Polygon File Format | ply       | binary | Potree Viewer     |                  | Requires Potree pipeline preprocessing for point cloud viewing                  |
+| Raster Image                      | png       | binary | Image Viewer      |                  |                                                                                 |
+| Raster Image                      | jpg       | binary | Image Viewer      |                  |                                                                                 |
+| Raster Image                      | jpeg      | binary | Image Viewer      |                  |                                                                                 |
+| Vector Image                      | svg       | text   | Image Viewer      |                  |                                                                                 |
+| Raster Image                      | gif       | binary | Image Viewer      |                  |                                                                                 |
+| Hypertext Markup Language         | html      | text   | HTML Viewer       |                  |                                                                                 |
+| Video - MPEG-4                    | mp4       | binary | Video Player      |                  |                                                                                 |
+| Video - WebM                      | webm      | binary | Video Player      |                  |                                                                                 |
+| Video - QuickTime                 | mov       | binary | Video Player      |                  |                                                                                 |
+| Video - AVI                       | avi       | binary | Video Player      |                  |                                                                                 |
+| Video - Matroska                  | mkv       | binary | Video Player      |                  |                                                                                 |
+| Video - Flash Video               | flv       | binary | Video Player      |                  |                                                                                 |
+| Video - Windows Media             | wmv       | binary | Video Player      |                  |                                                                                 |
+| Video - MPEG-4                    | m4v       | binary | Video Player      |                  |                                                                                 |
+| Audio - MP3                       | mp3       | binary | Audio Player      |                  |                                                                                 |
+| Audio - WAV                       | wav       | binary | Audio Player      |                  |                                                                                 |
+| Audio - Ogg Vorbis                | ogg       | binary | Audio Player      |                  |                                                                                 |
+| Audio - AAC                       | aac       | binary | Audio Player      |                  |                                                                                 |
+| Audio - FLAC                      | flac      | binary | Audio Player      |                  |                                                                                 |
+| Audio - MPEG-4                    | m4a       | binary | Audio Player      |                  |                                                                                 |
+| Columnar Data - R Data            | rds       | binary | Columnar Viewer   |                  |                                                                                 |
+| Columnar Data - Flow Cytometry    | fcs       | binary | Columnar Viewer   |                  |                                                                                 |
+| Columnar Data - CSV               | csv       | text   | Columnar Viewer   |                  |                                                                                 |
+| Portable Document Format          | pdf       | binary | PDF Viewer        |                  |                                                                                 |
+| 3D Tileset Metadata               | json      | text   | Cesium Viewer     |                  | For 3D Tileset files only; requires ALLOWUNSAFEEVAL feature                     |
+| Plain Text                        | txt       | text   | Text Viewer       |                  |                                                                                 |
+| JavaScript Object Notation        | json      | text   | Text Viewer       |                  | General JSON files (not 3D Tilesets)                                            |
+| Extensible Markup Language        | xml       | text   | Text Viewer       |                  |                                                                                 |
+| YAML Ain't Markup Language        | yaml      | text   | Text Viewer       |                  |                                                                                 |
+| YAML Ain't Markup Language        | yml       | text   | Text Viewer       |                  |                                                                                 |
+| Tom's Obvious Minimal Language    | toml      | text   | Text Viewer       |                  |                                                                                 |
+| Initialization File               | ini       | text   | Text Viewer       |                  |                                                                                 |
+| Jupyter Notebook                  | ipynb     | text   | Text Viewer       |                  |                                                                                 |
+| Information File                  | inf       | text   | Text Viewer       |                  |                                                                                 |
+| Configuration File                | cfg       | text   | Text Viewer       |                  |                                                                                 |
+| Markdown                          | md        | text   | Text Viewer       |                  |                                                                                 |
+| Shell Script                      | sh        | text   | Text Viewer       |                  |                                                                                 |
+| Python Script                     | py        | text   | Text Viewer       |                  |                                                                                 |
+| Log File                          | log       | text   | Text Viewer       |                  |                                                                                 |
+| JavaScript                        | js        | text   | Text Viewer       |                  |                                                                                 |
+| TypeScript                        | ts        | text   | Text Viewer       |                  |                                                                                 |
+| SQL Script                        | sql       | text   | Text Viewer       |                  |                                                                                 |
+| PowerShell Script                 | ps1       | text   | Text Viewer       |                  |                                                                                 |
+| Gaussian Splat - PLY              | ply       | binary | BabylonJS Splat   |                  | For Gaussian Splat point clouds (different from mesh PLY)                       |
+| Gaussian Splat - SPZ              | spz       | binary | BabylonJS Splat   |                  |                                                                                 |
+| Gaussian Splat - PLY              | ply       | binary | PlayCanvas Splat  |                  | For Gaussian Splat point clouds (different from mesh PLY)                       |
+| Gaussian Splat - SOG              | sog       | binary | PlayCanvas Splat  |                  |                                                                                 |
 
 Viewers available include:
 
--   [Online 3D Viewer](https://github.com/kovacsv/Online3DViewer)
--   [Potree Viewer](https://github.com/potree/potree)
+-   [Three.js Viewer](https://threejs.org/) - Primary viewer for common 3D mesh formats with advanced features including scene graph, material editing, and transform controls
+-   [Needle USD Viewer](https://needle.tools/) - Specialized viewer for Universal Scene Description (USD) files with WebAssembly-based rendering
+-   [Online 3D Viewer](https://github.com/kovacsv/Online3DViewer) - Handles specialized 3D formats not supported by Three.js (Rhinoceros 3D, AMF, BIM, OFF, VRML)
+-   [Potree Viewer](https://github.com/potree/potree) - Point cloud visualization
 
 Please take note:
 
 -   While we are limited to these formats to view assets, any file format may be uploaded to VAMS.
 -   There are some limitations with formats that leverage multiple files such as glTF that uses json with references to other files.
 -   Some viewers like Potree Viewer requires additional pipelines to be deployed to fully generate and view point cloud files.
+-   The **Preview 3D Thumbnail** pipeline (`usePreview3dThumbnail`) can generate animated GIF or static image preview thumbnails for most 3D file types including meshes (PLY, STL, OBJ, GLB, GLTF, FBX, DRC), point clouds (LAS, LAZ, E57, PTX, PCD, FLS, FWS), CAD files (STP, STEP), and USD files (USD, USDA, USDC, USDZ). When enabled and auto-registered, this pipeline is triggered on file upload and generates a preview file (`.previewFile.gif` or `.previewFile.jpg`) alongside the original asset. See [backendPipelines/preview/3dThumbnail/README.md](../backendPipelines/preview/3dThumbnail/README.md) for details.
 
-Exclusion\* notes:
+Optional\* notes:
 
--   Online 3D Viewer requires the more restrivi licensed opencascade sub-library to view these file types. They are excluded due to VAMS license restrictions on carrying LGPL libraries.
--   -   If an organizations wishes to implement this sub-library and view these excluded file types with Online 3D viewer, add the excluded file types to the `onlineViewer3DFileFormats` constants array in `./web/src/common/constants/fileFormats.js`. Then add the listed excluded npm library in the web folder through `yarn add`.
+-   **Three.js Viewer CAD Support**: The Three.js viewer includes optional support for CAD formats (STEP, IGES, BREP) through the OpenCascade Technology (OCCT) library (opencascade.js). This library is licensed under LGPL-2.1 and is dynamically loaded on-demand from a CDN only when CAD format support is explicitly enabled. The feature is disabled by default. Organizations wishing to use CAD format support should review the LGPL-2.1 license terms and enable the feature through the viewer configuration. The OCCT library is not bundled with VAMS.
 
 ### Implementing pipelines outside of Lambda
 
@@ -2650,6 +2812,37 @@ NOTE: If pipeline registered separately in VAMS Pipelines, it must be registered
 | Input File Types Supported        | Base Lambda Function Name - VAMS trigger | Base Lambda Function Name - SNS trigger |
 | :-------------------------------- | :--------------------------------------- | --------------------------------------- |
 | LAS, LAZ, E57, PLY (Point Clouds) | vamsExecutePreviewPcPotreeViewerPipeline | snsExecutePrviewPcPotreeViewerPipeline  |
+
+### Preview Type - 3D Thumbnail Preview Pipeline (Asynchronous)
+
+The 3D Thumbnail Preview Pipeline generates animated GIF or static image preview thumbnails from 3D asset files. The pipeline renders a 36-frame rotation of the 3D object at 800x600 resolution and saves the result as an optimized GIF. If rendering fails or only a single frame is produced, a static JPEG fallback is used. The output preview file is stored alongside the original asset in S3.
+
+If you wish to trigger this pipeline additionally/manually through VAMS pipeline, you can setup a new VAMS pipeline using the table below. You will need to lookup the lambda function name in the AWS console based on the base deployment name listed.
+
+The pipeline uses CPU-based headless rendering via PyVista/VTK with Xvfb inside an AWS Batch Fargate container. It supports a broad range of 3D file formats through specialized format handlers:
+
+-   **Mesh formats**: Loaded via the open-source Trimesh library (PLY, STL, OBJ, GLB, GLTF, FBX, DRC)
+-   **Point cloud formats**: Loaded via laspy (LAS/LAZ), pye57 (E57), and Open3D (PCD, FLS, FWS). PTX files are parsed directly. Point clouds exceeding 20 million points are downsampled for rendering performance.
+-   **CAD formats**: Loaded via the open-source CADQuery library for STEP/STP tessellation
+-   **USD formats**: Loaded via OpenUSD Python bindings (usd-core). Supports texture extraction from UsdShade material bindings including textures embedded in USDZ archives.
+
+The pipeline uses percentile-based camera framing (2nd-98th percentile) to handle sparse scenes such as single-position LiDAR scans where distant outlier points would otherwise cause the dense content to appear very small. All data is normalized to Y-up for consistent rendering. The maximum input file size is 100 GB. The Fargate container uses 200 GiB of ephemeral storage to accommodate large files.
+
+The following inputParameters are supported:
+
+```
+{
+    "overwriteExistingPreviewFiles": true  // Default: false. When false, the pipeline will fail if a preview file already exists for the input file. Set to true to overwrite existing preview files.
+}
+```
+
+NOTE: Pipeline must be registered in VAMS with the option of "Wait for Callback with the Task Token"
+
+| Input File Types Supported                                                                                         | Base Lambda Function Name             |
+| :----------------------------------------------------------------------------------------------------------------- | :------------------------------------ |
+| PLY, STL, OBJ, GLB, GLTF, FBX, DRC, LAS, LAZ, E57, PTX, PCD, FLS, FWS, STP, STEP, USD, USDA, USDC, USDZ (3D Files) | vamsExecutePreview3dThumbnailPipeline |
+
+See the [Preview 3D Thumbnail Pipeline README](../backendPipelines/preview/3dThumbnail/README.md) for detailed Docker build/run instructions, rendering details, and local testing information.
 
 ### Standard Type - GenerativeAI 3D Metadata Labeling Pipeline (Asynchronous)
 

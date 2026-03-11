@@ -846,6 +846,26 @@ export class ApiBuilderNestedStack extends NestedStack {
             method: apigateway.HttpMethod.GET,
             api: api,
         });
+        // Attach to updateVersion endpoint (edit comment, alias)
+        attachFunctionToApi(this, assetVersionsFunction, {
+            routePath: "/database/{databaseId}/assets/{assetId}/assetversions/{assetVersionId}",
+            method: apigateway.HttpMethod.PUT,
+            api: api,
+        });
+        // Attach to archiveVersion endpoint
+        attachFunctionToApi(this, assetVersionsFunction, {
+            routePath:
+                "/database/{databaseId}/assets/{assetId}/assetversions/{assetVersionId}/archive",
+            method: apigateway.HttpMethod.POST,
+            api: api,
+        });
+        // Attach to unarchiveVersion endpoint
+        attachFunctionToApi(this, assetVersionsFunction, {
+            routePath:
+                "/database/{databaseId}/assets/{assetId}/assetversions/{assetVersionId}/unarchive",
+            method: apigateway.HttpMethod.POST,
+            api: api,
+        });
 
         // Asset Export Service Function
         const assetExportServiceFunction = buildAssetExportService(
@@ -1183,6 +1203,12 @@ export class ApiBuilderNestedStack extends NestedStack {
             });
         }
 
+        attachFunctionToApi(this, authFunctions.authConstraintsTemplateService, {
+            routePath: "/auth/constraintsTemplateImport",
+            method: apigateway.HttpMethod.POST,
+            api: api,
+        });
+
         attachFunctionToApi(this, authFunctions.routes, {
             routePath: "/auth/routes",
             method: apigateway.HttpMethod.POST,
@@ -1197,6 +1223,37 @@ export class ApiBuilderNestedStack extends NestedStack {
 
         attachFunctionToApi(this, authFunctions.authLoginProfile, {
             routePath: "/auth/loginProfile/{userId}",
+            method: apigateway.HttpMethod.POST,
+            api: api,
+        });
+
+        // Cognito User Management Routes
+        attachFunctionToApi(this, authFunctions.cognitoUserService, {
+            routePath: "/user/cognito",
+            method: apigateway.HttpMethod.GET,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.cognitoUserService, {
+            routePath: "/user/cognito",
+            method: apigateway.HttpMethod.POST,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.cognitoUserService, {
+            routePath: "/user/cognito/{userId}",
+            method: apigateway.HttpMethod.PUT,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.cognitoUserService, {
+            routePath: "/user/cognito/{userId}",
+            method: apigateway.HttpMethod.DELETE,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.cognitoUserService, {
+            routePath: "/user/cognito/{userId}/resetPassword",
             method: apigateway.HttpMethod.POST,
             api: api,
         });

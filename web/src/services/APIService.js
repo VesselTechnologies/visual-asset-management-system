@@ -17,10 +17,28 @@ export const getAmplifyConfig = async () => {
         );
         console.log(amplifyConfigUrl.href);
         const response = await fetch(amplifyConfigUrl);
-        return response.json();
+
+        if (!response.ok) {
+            console.error("getAmplifyConfig: HTTP error", response.status, response.statusText);
+            // Return null on error - don't return corrupted data
+            // This allows the caller to detect the error and not cache bad data
+            return null;
+        }
+
+        const config = await response.json();
+
+        // Validate that we got a proper config object (not an error response)
+        if (!config || typeof config !== "object" || Array.isArray(config)) {
+            console.error("getAmplifyConfig: Invalid config response", config);
+            return null;
+        }
+
+        return config;
     } catch (error) {
-        console.log(error);
-        return [false, error?.message];
+        console.error("getAmplifyConfig: Fetch error", error);
+        // Return null on error - don't return corrupted data like [false, error.message]
+        // This prevents caching invalid data that would cause crashes
+        return null;
     }
 };
 
@@ -50,22 +68,28 @@ export const webRoutes = async (body) => {
  * @param {Object} params - Parameters object
  * @param {string} params.databaseId - Database ID
  * @param {string} params.assetId - Asset ID
- * @param {string} params.key - Optional key path for the file
- * @param {string} params.versionId - Optional version ID
- * @param {string} params.downloadType - Download type: "assetFile" (default) or "assetPreview"
+ * @param {string} [params.key] - Optional key path for the file
+ * @param {string} [params.versionId] - Optional version ID
+ * @param {string} [params.assetVersionId] - Optional asset version ID
+ * @param {string} [params.downloadType="assetFile"] - Download type: "assetFile" (default) or "assetPreview"
  * @returns {Promise<boolean|{message}|any>}
  */
 export const downloadAsset = async (
-    { databaseId, assetId, key, versionId, downloadType = "assetFile" },
+    { databaseId, assetId, key, versionId, assetVersionId = undefined, downloadType = "assetFile" },
     api = API
 ) => {
     try {
         // Build request body with new model structure
+        // Only include one version parameter — assetVersionId takes priority over versionId
         const body = {
             downloadType: downloadType,
             key: key,
-            versionId: versionId,
         };
+        if (assetVersionId) {
+            body.assetVersionId = assetVersionId;
+        } else if (versionId) {
+            body.versionId = versionId;
+        }
 
         const response = await api.post(
             "api",
@@ -601,6 +625,199 @@ export const fetchConstraints = async (api = API) => {
     } catch (error) {
         console.log(error);
         return error?.message;
+    }
+};
+
+/**
+ * Returns array of all Cognito users
+ * @returns {Promise<Array|boolean>}
+ */
+export const fetchCognitoUsers = async (api = API) => {
+    try {
+        let response = await api.get("api", "user/cognito", {});
+        let items = [];
+        const init = { queryStringParameters: { startingToken: null } };
+
+        // Handle direct response with users array
+        if (response.users && Array.isArray(response.users)) {
+            items = items.concat(response.users);
+            while (response.nextToken) {
+                init["queryStringParameters"]["startingToken"] = response.nextToken;
+                response = await api.get("api", "user/cognito", init);
+                if (response.users) {
+                    items = items.concat(response.users);
+                }
+            }
+            return items;
+        }
+        // Handle legacy response format with message wrapper
+        else if (response.message) {
+            if (response.message.users && Array.isArray(response.message.users)) {
+                items = items.concat(response.message.users);
+                while (response.message.nextToken) {
+                    init["queryStringParameters"]["startingToken"] = response.message.nextToken;
+                    response = await api.get("api", "user/cognito", init);
+                    if (response.message && response.message.users) {
+                        items = items.concat(response.message.users);
+                    }
+                }
+                return items;
+            } else if (response.message.Items) {
+                items = items.concat(response.message.Items);
+                while (response.message.NextToken) {
+                    init["queryStringParameters"]["startingToken"] = response.message.NextToken;
+                    response = await api.get("api", "user/cognito", init);
+                    items = items.concat(response.message.Items);
+                }
+                return items;
+            } else {
+                return response.message;
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return errorMessage;
+    }
+};
+
+/**
+ * Creates a new Cognito user
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @param {string} params.email - Email address
+ * @param {string} params.phone - Phone number (optional, E.164 format)
+ * @returns {Promise<[boolean, string]>}
+ */
+export const createCognitoUser = async ({ userId, email, phone }, api = API) => {
+    try {
+        const body = { userId, email };
+        if (phone) {
+            body.phone = phone;
+        }
+
+        const response = await api.post("api", "user/cognito", { body });
+
+        if (response.message) {
+            if (
+                response.message.indexOf("error") !== -1 ||
+                response.message.indexOf("Error") !== -1
+            ) {
+                console.log(response.message);
+                return [false, response.message];
+            } else {
+                return [true, response.message];
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
+    }
+};
+
+/**
+ * Updates an existing Cognito user
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @param {string} params.email - Email address (optional)
+ * @param {string} params.phone - Phone number (optional, E.164 format)
+ * @returns {Promise<[boolean, string]>}
+ */
+export const updateCognitoUser = async ({ userId, email, phone }, api = API) => {
+    try {
+        const body = {};
+        if (email) body.email = email;
+        if (phone) body.phone = phone;
+
+        const response = await api.put("api", `user/cognito/${userId}`, { body });
+
+        if (response.message) {
+            if (
+                response.message.indexOf("error") !== -1 ||
+                response.message.indexOf("Error") !== -1
+            ) {
+                console.log(response.message);
+                return [false, response.message];
+            } else {
+                return [true, response.message];
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
+    }
+};
+
+/**
+ * Deletes a Cognito user
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @returns {Promise<[boolean, string]>}
+ */
+export const deleteCognitoUser = async ({ userId }, api = API) => {
+    try {
+        const response = await api.del("api", `user/cognito/${userId}`, {});
+
+        if (response.message) {
+            console.log(response.message);
+            return [true, response.message];
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
+    }
+};
+
+/**
+ * Resets a Cognito user's password
+ * @param {Object} params - Parameters object
+ * @param {string} params.userId - User ID
+ * @returns {Promise<[boolean, string]>}
+ */
+export const resetCognitoUserPassword = async ({ userId }, api = API) => {
+    try {
+        const response = await api.post("api", `user/cognito/${userId}/resetPassword`, {
+            body: { userId },
+        });
+
+        if (response.message) {
+            if (
+                response.message.indexOf("error") !== -1 ||
+                response.message.indexOf("Error") !== -1
+            ) {
+                console.log(response.message);
+                return [false, response.message];
+            } else {
+                return [true, response.message];
+            }
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+        // Extract the actual error message from the API response
+        const errorMessage =
+            error?.response?.data?.message || error?.message || "An error occurred";
+        return [false, errorMessage];
     }
 };
 
@@ -1711,6 +1928,7 @@ export const fetchAssetS3Files = async (
  * @param {boolean} params.basic - Whether to use basic mode (faster, less data)
  * @param {string|null} params.startingToken - Pagination token
  * @param {number} params.pageSize - Page size (default: 1500 for basic, 100 for detailed)
+ * @param {string|null} [params.assetVersionId] - Asset version ID to filter files (optional)
  * @returns {Promise<{success: boolean, items: Array, nextToken: string|null, error: string|null}>}
  */
 export const fetchAssetS3FilesPage = async (
@@ -1721,6 +1939,7 @@ export const fetchAssetS3FilesPage = async (
         basic = false,
         startingToken = null,
         pageSize = null,
+        assetVersionId = null,
     },
     api = API
 ) => {
@@ -1746,6 +1965,10 @@ export const fetchAssetS3FilesPage = async (
 
         if (startingToken) {
             queryParams.startingToken = startingToken;
+        }
+
+        if (assetVersionId) {
+            queryParams.assetVersionId = assetVersionId;
         }
 
         const response = await api.get(
@@ -1808,10 +2031,18 @@ export const fetchAssetS3FilesPage = async (
  * @param {boolean} params.includeArchived - Whether to include archived files
  * @param {boolean} params.basic - Whether to use basic mode
  * @param {number} [params.pageSize] - Page size (optional)
+ * @param {string|null} [params.assetVersionId] - Asset version ID to filter files (optional)
  * @yields {Object} Page result with items and metadata
  */
 export async function* fetchAssetS3FilesStreaming(
-    { databaseId, assetId, includeArchived = false, basic = false, pageSize },
+    {
+        databaseId,
+        assetId,
+        includeArchived = false,
+        basic = false,
+        pageSize,
+        assetVersionId = null,
+    },
     api = API
 ) {
     let nextToken = null;
@@ -1820,7 +2051,15 @@ export async function* fetchAssetS3FilesStreaming(
     do {
         pageNumber++;
         const result = await fetchAssetS3FilesPage(
-            { databaseId, assetId, includeArchived, basic, startingToken: nextToken, pageSize },
+            {
+                databaseId,
+                assetId,
+                includeArchived,
+                basic,
+                startingToken: nextToken,
+                pageSize,
+                assetVersionId,
+            },
             api
         );
 
