@@ -13,14 +13,15 @@ import { Box, Button, Grid, SpaceBetween, TextContent } from "@cloudscape-design
 import TableList from "../../components/list/TableList";
 
 export const CognitoUsersListDefinition = new ListDefinition({
-    pluralName: "Users",
-    pluralNameTitleCase: "Users",
-    singularNameTitleCase: "User",
+    pluralName: "Cognito User Management",
+    pluralNameTitleCase: "Cognito User Management",
+    singularNameTitleCase: "Cognito User",
     visibleColumns: [
         "userId",
         "email",
         "phone",
         "userStatus",
+        "mfaEnabled",
         "userCreateDate",
         "userLastModifiedDate",
     ],
@@ -145,7 +146,7 @@ export default function CognitoUsers() {
                 <Grid gridDefinition={[{ colspan: 6 }]}>
                     <div>
                         <TextContent>
-                            <h1>User Management</h1>
+                            <h1>Cognito User Management</h1>
                         </TextContent>
                     </div>
                 </Grid>
@@ -154,10 +155,18 @@ export default function CognitoUsers() {
                         allItems={allItems}
                         loading={loading}
                         listDefinition={CognitoUsersListDefinition}
-                        editEnabled={false}
+                        editEnabled={true}
                         setReload={setReload}
                         onReload={reloadData}
-                        hideDeleteButton={true}
+                        UpdateSelectedElement={CreateCognitoUser}
+                        customHeaderActions={
+                            <Button
+                                disabled={selectedItems.length !== 1}
+                                onClick={() => setResetPasswordOpen(true)}
+                            >
+                                Reset Password
+                            </Button>
+                        }
                         onSelectionChange={(items: any[]) => setSelectedItems(items)}
                         createNewElement={
                             <div style={{ float: "right" }}>
@@ -167,7 +176,7 @@ export default function CognitoUsers() {
                                         variant="primary"
                                         data-testid="create-new-element-button"
                                     >
-                                        Create New User
+                                        Create Cognito User
                                     </Button>
                                 </SpaceBetween>
                             </div>

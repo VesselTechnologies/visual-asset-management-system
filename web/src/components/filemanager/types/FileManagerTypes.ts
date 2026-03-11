@@ -11,6 +11,7 @@ export interface FileKey {
     storageClass?: string;
     isArchived: boolean;
     currentAssetVersionFileVersionMismatch?: boolean;
+    isPermanentlyDeleted?: boolean;
     primaryType?: string | null;
     previewFile?: string;
 }
@@ -29,6 +30,7 @@ export interface FileTree {
     versionId?: string;
     isArchived?: boolean;
     currentAssetVersionFileVersionMismatch?: boolean;
+    isPermanentlyDeleted?: boolean;
     primaryType?: string | null;
     previewFile?: string;
 }
@@ -60,10 +62,13 @@ export interface FileManagerStateValues {
     isSearching: boolean;
     refreshTrigger: number; // Used to trigger a refresh of the file list
     showArchived: boolean; // Toggle to show/hide archived files
+    showNonIncluded: boolean; // Toggle to show/hide non-included files
     flattenedItems: FileTree[]; // Flattened array of all items for shift-selection
     totalAssetSize: number; // Total size of all files in the asset (excluding folders)
     paginationTokens: { basic: string | null; detailed: string | null }; // Track pagination tokens
     expandedFolders: Set<string>; // Set of relativePath strings for expanded folders
+    readOnly: boolean; // When true, hide mutating actions (version browsing mode)
+    assetVersionId?: string; // The asset version ID being viewed (undefined = latest)
 }
 
 export type FileManagerState = FileManagerStateValues;
@@ -107,6 +112,7 @@ export interface EnhancedFileManagerProps {
     assetName: string;
     assetFiles?: FileKey[];
     filePathToNavigate?: string; // Optional file path to navigate to and select
+    assetVersionId?: string; // Optional version ID to filter files by a specific asset version
 }
 
 export interface SetPrimaryTypeModalProps {

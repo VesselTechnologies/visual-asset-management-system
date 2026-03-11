@@ -4,6 +4,7 @@
  */
 
 import { fetchAllDatabases } from "../services/APIService";
+import CreateDatabase from "../components/createupdate/CreateDatabase";
 import { DatabaseListDefinition } from "../components/list/list-definitions/DatabaseListDefinition";
 import ListPage from "./ListPage";
 import Synonyms from "../synonyms";
@@ -16,11 +17,10 @@ export default function Databases() {
             pluralName={Synonyms.databases}
             pluralNameTitleCase={Synonyms.Databases}
             listDefinition={DatabaseListDefinition}
+            CreateNewElement={CreateDatabase || undefined}
             fetchAllElements={fetchAllDatabases}
             fetchElements={fetchAllDatabases}
-            editEnabled={false}
-            hideDeleteButton={true}
-            disableCreate={true}
+            editEnabled={true}
         />
     );
 }

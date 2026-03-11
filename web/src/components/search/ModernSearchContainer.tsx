@@ -9,7 +9,7 @@ import { Cache } from "aws-amplify";
 import { useNavigate } from "react-router-dom";
 import { Grid, Alert, SegmentedControl, Box } from "@cloudscape-design/components";
 import { featuresEnabled } from "../../common/constants/featuresEnabled";
-import { SearchContainerProps, MetadataFilter } from "./types";
+import { SearchContainerProps, MetadataFilter, getTotalResultCount } from "./types";
 import { useSearchState } from "./hooks/useSearchState";
 import { useSearchAPI } from "./hooks/useSearchAPI";
 import { usePreferences } from "./hooks/usePreferences";
@@ -52,8 +52,8 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     );
     const [useMapView] = useState(
         config.featuresEnabled?.includes(featuresEnabled.LOCATIONSERVICES) &&
-        !useNoOpenSearch &&
-        allowedViews.includes("map")
+            !useNoOpenSearch &&
+            allowedViews.includes("map")
     );
 
     // Hooks
@@ -175,7 +175,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
             searchState.setResult(result);
 
             if (!autoRefreshing) {
-                showSuccess("Search completed", `Found ${result.hits?.total?.value || 0} results`);
+                showSuccess("Search completed", `Found ${getTotalResultCount(result)} results`);
             }
         } catch (error: any) {
             console.error("Search error:", error);
@@ -300,7 +300,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                     metadataOperator
                 );
                 searchState.setResult(result);
-                showSuccess("Search completed", `Found ${result.hits?.total?.value || 0} results`);
+                showSuccess("Search completed", `Found ${getTotalResultCount(result)} results`);
             } catch (error: any) {
                 console.error("Search error:", error);
                 searchState.setError(error.message || "Search failed");
@@ -330,9 +330,17 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     const handleRecordTypeChange = (type: "asset" | "file") => {
         setRecordType(type);
 
-        // Map view only available for assets
+        // Map view only available for assets — switch to table and clean up map filters
         if (type === "file" && currentView === "map") {
             setCurrentView("table");
+            // Remove location metadata filters that map view added
+            const filteredMetadata = searchState.metadataFilters.filter((filter) => {
+                const keyLower = filter.key.toLowerCase();
+                return (
+                    keyLower !== "location" && keyLower !== "latitude" && keyLower !== "longitude"
+                );
+            });
+            searchState.setMetadataFilters(filteredMetadata);
         }
 
         // Remove mode-specific filters that don't apply to the new mode
@@ -403,23 +411,27 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     };
 
     // Calculate pagination values
+    const totalResults = getTotalResultCount(searchState.result);
     const currentPage = 1 + Math.floor(searchState.pagination.from / preferences.pageSize);
-    const pageCount = Math.ceil(
-        (searchState.result?.hits?.total?.value || 0) / preferences.pageSize
-    );
+    const pageCount = Math.ceil(totalResults / preferences.pageSize);
 
     console.log("[Pagination] Current page calculation:", {
         from: searchState.pagination.from,
         pageSize: preferences.pageSize,
         currentPage,
         pageCount,
-        totalResults: searchState.result?.hits?.total?.value,
+        totalResults,
+        hitsTotal: searchState.result?.hits?.total?.value,
+        aggregationTotal: searchState.result?.aggregationTotal,
     });
 
     // Render fallback for NoOpenSearch mode
     if (useNoOpenSearch) {
         return (
             <Box>
+                <Alert type="info" header="Limited Search Mode">
+                    OpenSearch is disabled. Using basic asset listing instead.
+                </Alert>
                 <ListPage
                     singularName={Synonyms.Asset}
                     singularNameTitleCase={Synonyms.Asset}
@@ -476,7 +488,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                         cardSize={preferences.cardSize}
                         showThumbnails={preferences.showThumbnails}
                         recordType={recordType}
-                        onOpenPreview={() => { }}
+                        onOpenPreview={() => {}}
                         currentPageIndex={currentPage}
                         pagesCount={pageCount}
                         onPageChange={(pageIndex) =>
@@ -485,14 +497,14 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                         onPreferencesChange={showPreferences ? handlePreferencesChange : undefined}
                         preferences={preferences}
                         onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
-                        onDeleteSelected={showBulkActions ? () => { } : undefined}
-                        totalItems={searchState.result?.hits?.total?.value}
+                        onDeleteSelected={showBulkActions ? () => {} : undefined}
+                        totalItems={totalResults}
                     />
                 );
 
             case "map":
                 if (useMapView && recordType === "asset") {
-                    return <SearchPageMapView state={searchState} dispatch={() => { }} />;
+                    return <SearchPageMapView state={searchState} dispatch={() => {}} />;
                 }
                 // Fall through to table view if map not available
                 return (
@@ -549,7 +561,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                    "An error occurred while searching"
+                                                        "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
@@ -594,7 +606,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                    "An error occurred while searching"
+                                                        "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
@@ -673,7 +685,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                    "An error occurred while searching"
+                                                        "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
@@ -718,7 +730,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                                                 showError(
                                                     "Search failed",
                                                     error.message ||
-                                                    "An error occurred while searching"
+                                                        "An error occurred while searching"
                                                 );
                                             } finally {
                                                 searchState.setLoading(false);
@@ -757,7 +769,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                 onSearch={handleSearch}
                 onClearAll={handleClearSearch}
                 loading={searchState.loading}
-                resultCount={searchState.result?.hits?.total?.value}
+                resultCount={totalResults}
                 hasActiveFilters={searchState.hasActiveFilters()}
                 title={
                     embedded?.title ||

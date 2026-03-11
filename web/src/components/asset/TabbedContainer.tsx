@@ -23,6 +23,7 @@ interface TabbedContainerProps {
     onWorkflowExecuted?: () => void; // Callback when workflow execution is complete
     workflowExecutedTrigger?: number; // Trigger value that changes when workflow is executed
     filePathToNavigate?: string; // Optional file path to navigate to in File Manager
+    assetVersionId?: string; // Optional version ID to filter files and metadata
 }
 
 export const TabbedContainer: React.FC<TabbedContainerProps> = ({
@@ -33,6 +34,7 @@ export const TabbedContainer: React.FC<TabbedContainerProps> = ({
     onWorkflowExecuted,
     workflowExecutedTrigger,
     filePathToNavigate,
+    assetVersionId,
 }) => {
     // Set File Manager tab as active by default, especially if we have a file path to navigate to
     const [activeTabId, setActiveTabId] = useState("file-manager");
@@ -59,7 +61,9 @@ export const TabbedContainer: React.FC<TabbedContainerProps> = ({
                     tabs={[
                         {
                             id: "file-manager",
-                            label: "File Manager",
+                            label: assetVersionId
+                                ? `File Manager (v${assetVersionId})`
+                                : "File Manager",
                             content: (
                                 <Suspense
                                     fallback={<LoadingSpinner text="Loading File Manager..." />}
@@ -67,25 +71,42 @@ export const TabbedContainer: React.FC<TabbedContainerProps> = ({
                                     <FileManagerTab
                                         assetName={assetName}
                                         filePathToNavigate={filePathToNavigate}
+                                        assetVersionId={assetVersionId}
                                     />
                                 </Suspense>
                             ),
                         },
-                        // {
-                        //     id: "workflows",
-                        //     label: "Workflows",
-                        //     content: (
-                        //         <Suspense fallback={<LoadingSpinner text="Loading Workflows..." />}>
-                        //             <WorkflowTab
-                        //                 databaseId={databaseId}
-                        //                 assetId={assetId}
-                        //                 isActive={activeTabId === "workflows"}
-                        //                 onExecuteWorkflow={onExecuteWorkflow}
-                        //                 refreshTrigger={workflowRefreshTrigger}
-                        //             />
-                        //         </Suspense>
-                        //     ),
-                        // },
+                        {
+                            id: "relationships",
+                            label: "Relationships",
+                            content: (
+                                <Suspense
+                                    fallback={<LoadingSpinner text="Loading Relationships..." />}
+                                >
+                                    <AssetLinksTab
+                                        mode="view"
+                                        assetId={assetId}
+                                        databaseId={databaseId}
+                                        isActive={activeTabId === "relationships"}
+                                    />
+                                </Suspense>
+                            ),
+                        },
+                        {
+                            id: "workflows",
+                            label: "Workflows",
+                            content: (
+                                <Suspense fallback={<LoadingSpinner text="Loading Workflows..." />}>
+                                    <WorkflowTab
+                                        databaseId={databaseId}
+                                        assetId={assetId}
+                                        isActive={activeTabId === "workflows"}
+                                        onExecuteWorkflow={onExecuteWorkflow}
+                                        refreshTrigger={workflowRefreshTrigger}
+                                    />
+                                </Suspense>
+                            ),
+                        },
                         {
                             id: "comments",
                             label: "Comments",

@@ -56,5 +56,11 @@ export const AssetListDefinition = new ListDefinition({
             cellWrapper: (props) => <>{props.children}</>,
             sortingField: "assetType",
         }),
+        new ColumnDefinition({
+            id: "tags",
+            header: "Tags",
+            cellWrapper: (props) => <>{props.children}</>,
+            sortingField: "tags",
+        }),
     ],
 });

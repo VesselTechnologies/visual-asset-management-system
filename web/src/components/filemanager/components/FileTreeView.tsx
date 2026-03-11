@@ -45,8 +45,9 @@ function TreeItem({ item }: TreeItemProps) {
     return (
         <div className="tree-item">
             <div
-                className={`tree-item-content ${isSelected ? "selected" : ""} ${isMultiSelected && state.multiSelectMode ? "multi-selected" : ""
-                    }`}
+                className={`tree-item-content ${isSelected ? "selected" : ""} ${
+                    isMultiSelected && state.multiSelectMode ? "multi-selected" : ""
+                }`}
                 style={{ paddingLeft: `${item.level * 16}px` }}
                 onClick={handleClick}
             >
@@ -89,17 +90,28 @@ function TreeItem({ item }: TreeItemProps) {
                     {!isFolder && item.primaryType && (
                         <span className="folder-count">({item.primaryType})</span>
                     )}
-                    {item.isArchived && (
+                    {item.isPermanentlyDeleted && (
+                        <span className="deleted-icon" title="Permanently Deleted">
+                            <Icon name="status-negative" variant="error" />
+                        </span>
+                    )}
+                    {!item.isPermanentlyDeleted && item.isArchived && (
                         <span className="archived-icon" title="Archived">
                             <Icon name="status-negative" />
                         </span>
                     )}
                     {/* Only show warning icon for files (not folders or top node) */}
-                    {item.currentAssetVersionFileVersionMismatch && !isFolder && item.level > 0 && (
-                        <span className="not-included-icon" title="Not included in Asset Version">
-                            <Icon name="status-warning" />
-                        </span>
-                    )}
+                    {!item.isPermanentlyDeleted &&
+                        item.currentAssetVersionFileVersionMismatch &&
+                        !isFolder &&
+                        item.level > 0 && (
+                            <span
+                                className="not-included-icon"
+                                title="Not included in Current Asset Version"
+                            >
+                                <Icon name="status-warning" />
+                            </span>
+                        )}
                 </span>
             </div>
 
@@ -115,7 +127,7 @@ function TreeItem({ item }: TreeItemProps) {
 }
 
 // Search Results Component
-function SearchResults({ }: SearchResultsProps) {
+function SearchResults({}: SearchResultsProps) {
     const context = useContext(FileManagerContext);
     if (!context) {
         throw new Error("SearchResults must be used within a FileManagerContext.Provider");
@@ -141,13 +153,15 @@ function SearchResults({ }: SearchResultsProps) {
                 return (
                     <div
                         key={item.keyPrefix}
-                        className={`search-result-item ${state.selectedItem?.relativePath === item.relativePath ? "selected" : ""
-                            } ${state.selectedItems.some(
+                        className={`search-result-item ${
+                            state.selectedItem?.relativePath === item.relativePath ? "selected" : ""
+                        } ${
+                            state.selectedItems.some(
                                 (selectedItem) => selectedItem.relativePath === item.relativePath
                             ) && state.multiSelectMode
                                 ? "multi-selected"
                                 : ""
-                            }`}
+                        }`}
                         onClick={(e) =>
                             dispatch({
                                 type: "SELECT_ITEM",
@@ -170,18 +184,24 @@ function SearchResults({ }: SearchResultsProps) {
                             {!isFolder && item.primaryType && (
                                 <span className="folder-count">({item.primaryType})</span>
                             )}
-                            {item.isArchived && (
+                            {item.isPermanentlyDeleted && (
+                                <span className="deleted-icon" title="Permanently Deleted">
+                                    <Icon name="status-negative" variant="error" />
+                                </span>
+                            )}
+                            {!item.isPermanentlyDeleted && item.isArchived && (
                                 <span className="archived-icon" title="Archived">
                                     <Icon name="status-negative" />
                                 </span>
                             )}
                             {/* Only show warning icon for files (not folders or top node) */}
-                            {item.currentAssetVersionFileVersionMismatch &&
+                            {!item.isPermanentlyDeleted &&
+                                item.currentAssetVersionFileVersionMismatch &&
                                 !isFolder &&
                                 item.level > 0 && (
                                     <span
                                         className="not-included-icon"
-                                        title="Not included in Asset Version"
+                                        title="Not included in Current Asset Version"
                                     >
                                         <Icon name="status-warning" />
                                     </span>
@@ -196,7 +216,7 @@ function SearchResults({ }: SearchResultsProps) {
 }
 
 // Directory Tree Component
-export function DirectoryTree({ }: DirectoryTreeProps) {
+export function DirectoryTree({}: DirectoryTreeProps) {
     const context = useContext(FileManagerContext);
     if (!context) {
         throw new Error("DirectoryTree must be used within a FileManagerContext.Provider");
@@ -212,10 +232,10 @@ export function DirectoryTree({ }: DirectoryTreeProps) {
         state.loadingPhase === "basic-loading"
             ? "Loading files..."
             : state.loadingPhase === "basic-complete"
-                ? "Loading files..."
-                : state.loadingPhase === "detailed-loading"
-                    ? "Loading details..."
-                    : "";
+            ? "Loading files..."
+            : state.loadingPhase === "detailed-loading"
+            ? "Loading details..."
+            : "";
 
     return (
         <div className="directory-tree-container">
@@ -290,6 +310,19 @@ export function DirectoryTree({ }: DirectoryTreeProps) {
                                 checked={state.showArchived}
                             >
                                 Show archived files
+                            </Toggle>
+                        </div>
+                        <div className="non-included-toggle">
+                            <Toggle
+                                onChange={({ detail }) =>
+                                    dispatch({
+                                        type: "TOGGLE_SHOW_NON_INCLUDED",
+                                        payload: null,
+                                    })
+                                }
+                                checked={state.showNonIncluded}
+                            >
+                                Filter for non-included
                             </Toggle>
                         </div>
                     </div>

@@ -90,7 +90,7 @@ export const AssetDetailsPane: React.FC<AssetDetailsPaneProps> = ({
                         message: (
                             <span>
                                 You've successfully unsubscribed from{" "}
-                                <i>Repository Version Change</i> updates for{" "}
+                                <i>{subscriptionBody.eventName}</i> updates for{" "}
                                 <i>{asset.assetName}</i>. To resume receiving updates, please
                                 subscribe again.
                             </span>
@@ -112,7 +112,7 @@ export const AssetDetailsPane: React.FC<AssetDetailsPaneProps> = ({
                         message: (
                             <span>
                                 You've successfully signed up for receiving updates on{" "}
-                                <i>Repository Version Change</i> for <i>{asset.assetName}</i>.
+                                <i>{subscriptionBody.eventName}</i> for <i>{asset.assetName}</i>.
                                 Please check your inbox and confirm the subscription.
                             </span>
                         ),
@@ -125,8 +125,9 @@ export const AssetDetailsPane: React.FC<AssetDetailsPaneProps> = ({
             console.error("Subscription error:", error);
             showMessage({
                 type: "error",
-                message: `Failed to ${subscribed ? "unsubscribe" : "subscribe"}: ${error.message || "Unknown error"
-                    }`,
+                message: `Failed to ${subscribed ? "unsubscribe" : "subscribe"}: ${
+                    error.message || "Unknown error"
+                }`,
                 dismissible: true,
             });
         } finally {
@@ -158,7 +159,7 @@ export const AssetDetailsPane: React.FC<AssetDetailsPaneProps> = ({
                             </SpaceBetween>
                         }
                     >
-                        Repository Details
+                        Asset Details
                     </Header>
                 }
             >
@@ -166,13 +167,35 @@ export const AssetDetailsPane: React.FC<AssetDetailsPaneProps> = ({
                     {/* Column 1 */}
                     <div>
                         <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px" }}>
-                            Repository Id
+                            Asset Id
                         </div>
                         <div style={{ marginBottom: "16px" }}>{asset?.assetId}</div>
                         <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px" }}>
                             Description
                         </div>
                         <div style={{ marginBottom: "16px" }}>{asset?.description}</div>
+                        <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px" }}>
+                            Tags
+                        </div>
+                        <div style={{ marginBottom: "16px" }}>
+                            {Array.isArray(asset?.tags) && asset.tags.length > 0
+                                ? asset.tags
+                                      .map((tag: any) => {
+                                          const tagType = JSON.parse(
+                                              localStorage.getItem("tagTypes") ||
+                                                  '{"tagTypeName": "", "tags": []}'
+                                          ).find((type: any) => type.tags.includes(tag));
+
+                                          //If tagType has required field add [R] to tag type name
+                                          if (tagType && tagType.required === "True") {
+                                              tagType.tagTypeName += " [R]";
+                                          }
+
+                                          return tagType ? `${tag} (${tagType.tagTypeName})` : tag;
+                                      })
+                                      .join(", ")
+                                : "No tags assigned"}
+                        </div>
                     </div>
 
                     {/* Column 2 */}
@@ -192,28 +215,28 @@ export const AssetDetailsPane: React.FC<AssetDetailsPaneProps> = ({
                     {/* Column 3 */}
                     <div>
                         <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px" }}>
-                            Version
+                            Current Version
                         </div>
                         <div style={{ marginBottom: "16px" }}>
                             v{asset?.currentVersion?.Version}
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px" }}>
-                            Version Date
+                            Current Version Date
                         </div>
                         <div style={{ marginBottom: "16px" }}>
                             {asset?.currentVersion?.DateModified
                                 ? new Date(asset.currentVersion.DateModified).toLocaleString(
-                                    "en-US",
-                                    {
-                                        year: "numeric",
-                                        month: "numeric",
-                                        day: "numeric",
-                                        hour: "numeric",
-                                        minute: "numeric",
-                                        second: "numeric",
-                                        hour12: true,
-                                    }
-                                )
+                                      "en-US",
+                                      {
+                                          year: "numeric",
+                                          month: "numeric",
+                                          day: "numeric",
+                                          hour: "numeric",
+                                          minute: "numeric",
+                                          second: "numeric",
+                                          hour12: true,
+                                      }
+                                  )
                                 : ""}
                         </div>
                     </div>

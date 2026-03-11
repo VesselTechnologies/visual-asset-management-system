@@ -3,17 +3,59 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import Box from "@cloudscape-design/components/box";
+import Button from "@cloudscape-design/components/button";
 import ColumnLayout from "@cloudscape-design/components/column-layout";
 import Container from "@cloudscape-design/components/container";
 import Grid from "@cloudscape-design/components/grid";
+import Header from "@cloudscape-design/components/header";
+import Icon from "@cloudscape-design/components/icon";
 import SpaceBetween from "@cloudscape-design/components/space-between";
 
+import { ExternalLinkItem } from "../common/common-components";
 import "../styles/landing-page.scss";
 
-const LandingPage = () => {
+import addPipelinesImageSrc from "../resources/img/add_pipelines.png";
+import buildWorkflowsImageSrc from "../resources/img/build_workflows.png";
+import uploadAndManageImageSrc from "../resources/img/upload_and_manage.png";
+import visualize3dVrImageSrc from "../resources/img/visualize_3d_vr.png";
+import Synonyms from "../synonyms";
+
+const CarouselRadio = ({ id, setSlide, slide }) => {
+    return (
+        <input
+            type="radio"
+            name="radio-buttons"
+            id={id}
+            onChange={(evt) => setSlide(evt.target.id)}
+            checked={slide === id}
+        />
+    );
+};
+
+const LandingPage = (props) => {
+    const { navigationOpen } = props;
+    const [carouselHeight, setCarouselHeight] = useState(400);
+    const [slide, setSlide] = useState("img-1");
+    const firstCarouselImageEl = useRef(null);
+
+    useEffect(() => {
+        function handleResize() {
+            const currentHeight = firstCarouselImageEl?.current?.clientHeight;
+            if (currentHeight !== carouselHeight) {
+                setCarouselHeight(currentHeight);
+            }
+        }
+        setTimeout(() => handleResize(), 100);
+
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [navigationOpen, carouselHeight]);
+
     return (
         <Box margin={{ bottom: "l" }}>
             <div className="custom-home__header">
@@ -42,7 +84,7 @@ const LandingPage = () => {
                                 fontSize="display-l"
                                 color="inherit"
                             >
-                                TIAMAT VAMS
+                                Amazon VAMS
                             </Box>
                             <Box
                                 fontWeight="light"
@@ -50,17 +92,14 @@ const LandingPage = () => {
                                 fontSize="display-l"
                                 color="inherit"
                             >
-                                Robots, Worlds, Sim-Ready Assets,
-                                <br />
-                                and Policies for Physical Intelligence
+                                Management, distribution and automation for visual assets
                             </Box>
                             <Box variant="p" fontWeight="light">
                                 <span className="custom-home__header-sub-title">
-                                    An AWS S3 powered solution for large file version control
-                                    <br />
-                                    Store, view, and share files up to 5 Terabytes in size
-                                    <br />
-                                    Access high-fidelity open-source models in one place
+                                    Visual Asset Management with Amazon VAMS is a purpose built
+                                    platform for storing and managing visual assets in the cloud,
+                                    and a plugin system which allows for customize-able
+                                    visualization, transformation, and delivery of these assets.
                                 </span>
                             </Box>
                         </div>
@@ -85,8 +124,12 @@ const LandingPage = () => {
                 <Grid
                     gridDefinition={[
                         {
-                            colspan: { xl: 8, l: 8, s: 10, xxs: 10 },
+                            colspan: { xl: 6, l: 5, s: 6, xxs: 10 },
                             offset: { l: 2, xxs: 1 },
+                        },
+                        {
+                            colspan: { xl: 2, l: 3, s: 4, xxs: 10 },
+                            offset: { s: 0, xxs: 1 },
                         },
                     ]}
                 >
@@ -94,41 +137,97 @@ const LandingPage = () => {
                         <SpaceBetween size="l">
                             <div>
                                 <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
-                                    Getting Started
+                                    How it works
                                 </Box>
                                 <Container>
-                                    <a
-                                        href="https://www.youtube.com/watch?v=kgaO45SyaO4"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{ display: "block", position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", cursor: "pointer" }}
-                                    >
-                                        <img
-                                            src="https://img.youtube.com/vi/kgaO45SyaO4/maxresdefault.jpg"
-                                            alt="Watch on YouTube"
-                                            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                                        />
-                                        {/* Play button overlay */}
-                                        <div style={{
-                                            position: "absolute", top: "50%", left: "50%",
-                                            transform: "translate(-50%, -50%)",
-                                            width: 72, height: 72, borderRadius: "50%",
-                                            backgroundColor: "rgba(0,0,0,0.7)",
-                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                        }}>
-                                            <div style={{
-                                                width: 0, height: 0,
-                                                borderTop: "14px solid transparent",
-                                                borderBottom: "14px solid transparent",
-                                                borderLeft: "24px solid white",
-                                                marginLeft: 5,
-                                            }} />
-                                        </div>
-                                    </a>
+                                    <div className="carousel">
+                                        <ul
+                                            className="slides"
+                                            style={{ height: carouselHeight + "px" }}
+                                        >
+                                            <CarouselRadio
+                                                id="img-1"
+                                                setSlide={setSlide}
+                                                slide={slide}
+                                            />
+                                            <li className="slide-container">
+                                                <div className="slide-image">
+                                                    <img
+                                                        ref={firstCarouselImageEl}
+                                                        src={uploadAndManageImageSrc}
+                                                        alt={`Upload & Manage ${Synonyms.Assets}`}
+                                                    />
+                                                </div>
+                                            </li>
+                                            <CarouselRadio
+                                                id="img-2"
+                                                setSlide={setSlide}
+                                                slide={slide}
+                                            />
+                                            <li className="slide-container">
+                                                <div className="slide-image">
+                                                    <img
+                                                        src={visualize3dVrImageSrc}
+                                                        alt="Visualize in 3d & VR"
+                                                    />
+                                                </div>
+                                            </li>
+                                            <CarouselRadio
+                                                id="img-3"
+                                                setSlide={setSlide}
+                                                slide={slide}
+                                            />
+
+                                            <li className="slide-container">
+                                                <div className="slide-image">
+                                                    <img
+                                                        src={addPipelinesImageSrc}
+                                                        alt="Add Pipelines"
+                                                    />
+                                                </div>
+                                            </li>
+                                            <CarouselRadio
+                                                id="img-4"
+                                                setSlide={setSlide}
+                                                slide={slide}
+                                            />
+
+                                            <li className="slide-container">
+                                                <div className="slide-image">
+                                                    <img
+                                                        src={buildWorkflowsImageSrc}
+                                                        alt="Build Workflows"
+                                                    />
+                                                </div>
+                                            </li>
+                                            <div className="carousel-dots">
+                                                <label
+                                                    htmlFor="img-1"
+                                                    className="carousel-dot"
+                                                    id="img-dot-1"
+                                                ></label>
+                                                <label
+                                                    htmlFor="img-2"
+                                                    className="carousel-dot"
+                                                    id="img-dot-2"
+                                                ></label>
+                                                <label
+                                                    htmlFor="img-3"
+                                                    className="carousel-dot"
+                                                    id="img-dot-3"
+                                                ></label>
+                                                <label
+                                                    htmlFor="img-4"
+                                                    className="carousel-dot"
+                                                    id="img-dot-4"
+                                                ></label>
+                                            </div>
+                                        </ul>
+                                    </div>
                                 </Container>
                             </div>
 
-                            {/* <div>
+                            <div>
                                 <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
                                     Benefits and features
                                 </Box>
@@ -196,11 +295,11 @@ const LandingPage = () => {
                                         </div>
                                     </ColumnLayout>
                                 </Container>
-                            </div> */}
+                            </div>
                         </SpaceBetween>
                     </div>
 
-                    {/* <div className="custom-home__sidebar">
+                    <div className="custom-home__sidebar">
                         <SpaceBetween size="xxl">
                             <Container
                                 header={
@@ -238,7 +337,7 @@ const LandingPage = () => {
                                 Coming Soon
                             </Container>
                         </SpaceBetween>
-                    </div> */}
+                    </div>
                 </Grid>
             </Box>
         </Box>

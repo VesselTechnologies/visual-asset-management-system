@@ -4,10 +4,10 @@
  */
 
 const Synonyms = {
-    Asset: "Repository",
-    Assets: "Repositories",
-    assets: "repositories",
-    asset: "repository",
+    Asset: "Asset",
+    Assets: "Assets",
+    assets: "assets",
+    asset: "asset",
     Database: "Database",
     Databases: "Databases",
     databases: "databases",

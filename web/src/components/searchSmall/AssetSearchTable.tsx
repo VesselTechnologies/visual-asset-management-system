@@ -323,11 +323,12 @@ export function AssetSearchTable({
         const columns: any[] = [
             {
                 id: "assetName",
-                header: "Repository Name",
+                header: "Asset Name",
                 cell: (item: AssetSearchItem) => (
                     <Link
-                        href={`#/databases/${item.databaseName || item.databaseId}/assets/${item.assetId
-                            }`}
+                        href={`#/databases/${item.databaseName || item.databaseId}/assets/${
+                            item.assetId
+                        }`}
                         external
                         target="_blank"
                     >
@@ -404,7 +405,7 @@ export function AssetSearchTable({
                         columns={selectedAssetsColumns}
                         items={selectedAssets}
                         selectedItems={[]}
-                        setSelectedItems={() => { }}
+                        setSelectedItems={() => {}}
                         trackBy="assetId"
                         enablePagination={true}
                         pageSize={5}
@@ -557,7 +558,7 @@ export function AssetSearchTable({
                             </>
                         ) : (
                             <Box textAlign="center" padding="m" color="text-status-inactive">
-                                No repositories found matching your search
+                                No assets found matching your search
                             </Box>
                         )}
                     </SpaceBetween>

@@ -449,11 +449,11 @@ export default function ModifyAssetsUploadsPage() {
                 <Grid gridDefinition={[{ colspan: { default: 12 } }]}>
                     <div>
                         <TextContent>
-                            <Header variant="h1">Modify Repository Files</Header>
+                            <Header variant="h1">Modify Asset Files</Header>
                         </TextContent>
 
-                        {/* Repository Information */}
-                        <Container header={<Header variant="h2">Repository Information</Header>}>
+                        {/* Asset Information */}
+                        <Container header={<Header variant="h2">Asset Information</Header>}>
                             <SpaceBetween direction="vertical" size="m">
                                 <Box variant="awsui-key-label">
                                     {Synonyms.Asset}:
@@ -461,10 +461,11 @@ export default function ModifyAssetsUploadsPage() {
                                         href={`#/databases/${assetDetail.databaseId}/assets/${assetDetail.assetId}`}
                                         target="_blank"
                                     >
-                                        {` ${assetDetail.assetName ||
+                                        {` ${
+                                            assetDetail.assetName ||
                                             assetDetail.assetId ||
                                             "Loading..."
-                                            }`}
+                                        }`}
                                     </Link>
                                 </Box>
                                 <Box variant="awsui-key-label">
@@ -561,7 +562,7 @@ export default function ModifyAssetsUploadsPage() {
                                                 <li>
                                                     You cannot upload a preview file for a file that
                                                     is not part of this upload or is already
-                                                    uploaded as part of the repository.
+                                                    uploaded as part of the asset.
                                                 </li>
                                                 <li>
                                                     Only{" "}
@@ -596,7 +597,7 @@ export default function ModifyAssetsUploadsPage() {
                                             {/* Asset Files Selection */}
                                             <SpaceBetween direction="vertical" size="m">
                                                 <FormField
-                                                    label="Repository Files"
+                                                    label="Asset Files"
                                                     description={
                                                         fileItems.length > 0
                                                             ? `Total Files to Upload: ${fileItems.length}`
@@ -637,7 +638,7 @@ export default function ModifyAssetsUploadsPage() {
                                             {/* Preview File Selection - Only show when uploading to root path (including "/") */}
                                             {isRootPath && (
                                                 <FileUpload
-                                                    label="Repository Overall Preview File (Optional)"
+                                                    label="Asset Overall Preview File (Optional)"
                                                     disabled={false}
                                                     setFile={handlePreviewFileSelection}
                                                     fileFormats={previewFileFormatsStr}
@@ -675,8 +676,8 @@ export default function ModifyAssetsUploadsPage() {
                                                         fontSize="body-s"
                                                     >
                                                         {isRootPath
-                                                            ? "Please select at least one repository file or preview file to upload."
-                                                            : "Please select at least one repository file to upload."}
+                                                            ? "Please select at least one asset file or preview file to upload."
+                                                            : "Please select at least one asset file to upload."}
                                                     </Box>
                                                 )}
                                             <Button

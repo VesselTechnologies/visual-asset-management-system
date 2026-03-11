@@ -11,6 +11,7 @@ import {
     SpaceBetween,
     Alert,
     FormField,
+    Input,
     Textarea,
     SegmentedControl,
     Container,
@@ -51,6 +52,7 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [comment, setComment] = useState<string>("");
+    const [versionAlias, setVersionAlias] = useState<string>("");
     const [creationMode, setCreationMode] = useState<CreationMode>("current");
 
     // Files state
@@ -93,6 +95,7 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
             setLoading(false);
             setError(null);
             setComment("");
+            setVersionAlias("");
             setCreationMode("current");
             setSelectedFiles([]);
             setShowArchived(false);
@@ -307,6 +310,7 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
                     useLatestFiles: true,
                     files: [], // Provide empty array to satisfy TypeScript
                     comment,
+                    versionAlias,
                 });
             } else if (creationMode === "select" || creationMode === "modify") {
                 // Use selected files
@@ -322,6 +326,7 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
                     useLatestFiles: false,
                     files: selectedFiles,
                     comment,
+                    versionAlias,
                 });
             }
 
@@ -504,13 +509,13 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
             prev.map((f: SelectedFile) =>
                 f.relativeKey === file.relativeKey
                     ? {
-                        ...f,
-                        versionId,
-                        // If the version ID is different from the current one, it's not the current version
-                        isCurrent: versionId === file.versionId ? f.isCurrent : false,
-                        // Keep the version mismatch flag
-                        versionMismatch: f.versionMismatch,
-                    }
+                          ...f,
+                          versionId,
+                          // If the version ID is different from the current one, it's not the current version
+                          isCurrent: versionId === file.versionId ? f.isCurrent : false,
+                          // Keep the version mismatch flag
+                          versionMismatch: f.versionMismatch,
+                      }
                     : f
             )
         );
@@ -664,7 +669,7 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
         <Modal
             visible={visible}
             onDismiss={onDismiss}
-            header="Create New Repository Version"
+            header="Create New Asset Version"
             size="max"
             footer={
                 <Box float="right">
@@ -721,18 +726,35 @@ export const CreateAssetVersionModal: React.FC<CreateAssetVersionModalProps> = (
                         options={[
                             { text: "Use all current files and versions", id: "current" },
                             { text: "Select specific files and versions", id: "select" },
-                            { text: "Modify from current repository version", id: "modify" },
+                            { text: "Modify from current asset version", id: "modify" },
                         ]}
                     />
                 </FormField>
 
                 <Alert type="info">
                     <strong>Metadata Versioning:</strong> Creating this version will automatically
-                    snapshot the current metadata and attributes of the repository and all selected
+                    snapshot the current metadata and attributes of the asset and all selected
                     files.
                 </Alert>
 
                 {renderCreationModeContent()}
+
+                <FormField
+                    label="Version Alias"
+                    description="An optional short name for this version (e.g., RC1, GA, Beta). Max 64 characters."
+                    constraintText={`${versionAlias.length}/64 characters`}
+                >
+                    <Input
+                        value={versionAlias}
+                        onChange={({ detail }) => {
+                            if (detail.value.length <= 64) {
+                                setVersionAlias(detail.value);
+                            }
+                        }}
+                        placeholder="e.g., RC1, GA, Beta"
+                        disabled={loading}
+                    />
+                </FormField>
 
                 <FormField
                     label="Version Comment *"

@@ -325,7 +325,7 @@ function UploadModeAssetLinksTab(props: AssetLinksTabProps) {
     const [treeData, setTreeData] = useState<TreeNodeItem[]>([
         {
             id: "related",
-            name: "Related Repositories",
+            name: "Related Assets",
             type: "root" as const,
             level: 0,
             expanded: true,
@@ -334,7 +334,7 @@ function UploadModeAssetLinksTab(props: AssetLinksTabProps) {
         },
         {
             id: "parents",
-            name: "Parent Repositories",
+            name: "Parent Assets",
             type: "root" as const,
             level: 0,
             expanded: true,
@@ -343,7 +343,7 @@ function UploadModeAssetLinksTab(props: AssetLinksTabProps) {
         },
         {
             id: "child",
-            name: "Child Repositories",
+            name: "Child Assets",
             type: "root" as const,
             level: 0,
             expanded: true,
@@ -394,14 +394,15 @@ function UploadModeAssetLinksTab(props: AssetLinksTabProps) {
                     relationshipType === "parent" ? "parents" : relationshipType;
                 const assets =
                     localAssetLinks.assetLinksFe[
-                    relationshipKey as keyof typeof localAssetLinks.assetLinksFe
+                        relationshipKey as keyof typeof localAssetLinks.assetLinksFe
                     ] || [];
 
                 return {
                     ...rootNode,
                     children: assets.map((asset: AssetNode, index: number) => ({
-                        id: `${relationshipType}-${asset.assetId}-${asset.assetLinkAliasId || "no-alias"
-                            }-${index}`,
+                        id: `${relationshipType}-${asset.assetId}-${
+                            asset.assetLinkAliasId || "no-alias"
+                        }-${index}`,
                         name: asset.assetName,
                         type: "asset" as const,
                         level: 1,

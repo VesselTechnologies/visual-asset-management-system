@@ -18,7 +18,7 @@ if (config.CUSTOMER_LOGO) {
     navHeader.logo = { alt: "logo", src: config.CUSTOMER_LOGO };
 }
 
-const defaultOnFollowHandler = (ev) => { };
+const defaultOnFollowHandler = (ev) => {};
 
 function CenterSpinner() {
     return (
@@ -49,7 +49,7 @@ export function Navigation({
             text: "Manage",
             items: [
                 { type: "link", text: Synonyms.Databases, href: "#/databases/" },
-                { type: "link", text: "Repositories", href: "#/assets/" },
+                { type: "link", text: "Assets and Files", href: "#/assets/" },
                 { type: "link", text: `Create ${Synonyms.Asset}`, href: "#/upload/" },
             ],
         },
@@ -97,12 +97,12 @@ export function Navigation({
                 },
                 ...(!window.DISABLE_COGNITO
                     ? [
-                        {
-                            type: "link",
-                            text: "User Management",
-                            href: "#/auth/cognitousers/",
-                        },
-                    ]
+                          {
+                              type: "link",
+                              text: "Cognito User Management",
+                              href: "#/auth/cognitousers/",
+                          },
+                      ]
                     : []),
                 {
                     type: "link",
@@ -121,7 +121,7 @@ export function Navigation({
                 },
                 {
                     type: "link",
-                    text: "Repository Ingestion",
+                    text: "Asset Ingestion",
                     href: "#/assetIngestion",
                 },
             ],
@@ -173,7 +173,7 @@ export function Navigation({
                     setNavigationItems([]);
                     setLoading(false);
                 });
-        } catch (e) { }
+        } catch (e) {}
     }, []);
 
     return loading ? (

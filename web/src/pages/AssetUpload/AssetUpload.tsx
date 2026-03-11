@@ -472,7 +472,7 @@ const AssetPrimaryInfo = ({ setValid, showErrors }: AssetPrimaryInfoProps) => {
     }, []);
 
     return (
-        <Container>
+        <Container header={<Header variant="h2">{Synonyms.Asset} Details</Header>}>
             <SpaceBetween direction="vertical" size="l">
                 <FormField
                     label={`${Synonyms.Asset} Name`}
@@ -522,7 +522,6 @@ const AssetPrimaryInfo = ({ setValid, showErrors }: AssetPrimaryInfoProps) => {
                     />
                 </FormField>
 
-                {/* Is Distributable field hidden - defaults to true
                 <FormField label="Is Distributable?">
                     <Select
                         options={isDistributableOptions}
@@ -547,7 +546,6 @@ const AssetPrimaryInfo = ({ setValid, showErrors }: AssetPrimaryInfoProps) => {
                         data-testid="isDistributable-select"
                     />
                 </FormField>
-                */}
 
                 <FormField
                     label="Description"
@@ -566,7 +564,6 @@ const AssetPrimaryInfo = ({ setValid, showErrors }: AssetPrimaryInfoProps) => {
                     />
                 </FormField>
 
-                {/* Tags field hidden
                 <FormField
                     label="Tags"
                     constraintText={constraintText.tags}
@@ -596,7 +593,6 @@ const AssetPrimaryInfo = ({ setValid, showErrors }: AssetPrimaryInfoProps) => {
                         options={tags}
                     />
                 </FormField>
-                */}
             </SpaceBetween>
         </Container>
     );
@@ -1003,7 +999,7 @@ const AssetFileInfo = ({
                         <ul>
                             <li>
                                 You cannot upload a preview file for a file that is not part of this
-                                upload or is already uploaded as part of the repository.
+                                upload or is already uploaded as part of the asset.
                             </li>
                             <li>
                                 Only{" "}
@@ -1031,7 +1027,7 @@ const AssetFileInfo = ({
                     >
                         <SpaceBetween direction="vertical" size="m">
                             <FormField
-                                label="Repository Files"
+                                label="Asset Files"
                                 description={
                                     assetDetailState.Asset
                                         ? `Total Files to Upload: ${assetDetailState.Asset.length}`
@@ -1119,7 +1115,7 @@ const AssetFileInfo = ({
                         </SpaceBetween>
 
                         <FileUpload
-                            label="Repository Overall Preview File (Optional)"
+                            label="Asset Overall Preview File (Optional)"
                             disabled={false}
                             setFile={handlePreviewFileSelection}
                             fileFormats={previewFileFormatsStr}
@@ -1163,16 +1159,16 @@ const AssetUploadReview = ({
     // Create a preview file item if it exists
     const previewFileItem = assetDetailState.Preview
         ? ({
-            handle: { getFile: () => Promise.resolve(assetDetailState.Preview as File) },
-            index: 99999, // Use a high index to distinguish from regular files
-            name: assetDetailState.Preview.name,
-            size: assetDetailState.Preview.size,
-            relativePath: `previews/${assetDetailState.Preview.name}`,
-            progress: 0,
-            status: "Queued" as "Queued" | "In Progress" | "Completed" | "Failed", // Explicitly type the status
-            loaded: 0,
-            total: assetDetailState.Preview.size,
-        } as FileUploadTableItem)
+              handle: { getFile: () => Promise.resolve(assetDetailState.Preview as File) },
+              index: 99999, // Use a high index to distinguish from regular files
+              name: assetDetailState.Preview.name,
+              size: assetDetailState.Preview.size,
+              relativePath: `previews/${assetDetailState.Preview.name}`,
+              progress: 0,
+              status: "Queued" as "Queued" | "In Progress" | "Completed" | "Failed", // Explicitly type the status
+              loaded: 0,
+              total: assetDetailState.Preview.size,
+          } as FileUploadTableItem)
         : null;
 
     // Combine asset files and preview file for display
@@ -1187,13 +1183,13 @@ const AssetUploadReview = ({
                 variant="h3"
                 actions={<Button onClick={() => setActiveStepIndex(0)}>Edit</Button>}
             >
-
+                Review
             </Header>
-            <Container>
+            <Container header={<Header variant="h2">{Synonyms.Asset} Detail</Header>}>
                 <ColumnLayout columns={2} variant="text-grid">
                     <SpaceBetween direction="vertical" size="xl">
-                        {/* Left Column: Repository Name, Database, Description */}
-                        <DisplayKV label="Repository Name" value={assetDetailState.assetName || ""} />
+                        {/* Left Column: Asset Name, Database, Description */}
+                        <DisplayKV label="Asset Name" value={assetDetailState.assetName || ""} />
                         <DisplayKV label="Database" value={assetDetailState.databaseId || ""} />
                         <DisplayKV label="Description" value={assetDetailState.description || ""} />
                     </SpaceBetween>
@@ -1204,24 +1200,20 @@ const AssetUploadReview = ({
                             label="Is Distributable"
                             value={assetDetailState.isDistributable === false ? "No" : "Yes"}
                         />
-                        {/* Tags hidden per request
                         <DisplayKV
                             label="Tags"
                             value={
                                 assetDetailState.frontendTags
                                     ? assetDetailState.frontendTags
-                                        .map((tag: any) => tag?.label)
-                                        .join(", ")
+                                          .map((tag: any) => tag?.label)
+                                          .join(", ")
                                     : ""
                             }
                         />
-                        */}
                     </SpaceBetween>
                 </ColumnLayout>
             </Container>
-            {/* Linked Repositories hidden per request
-            <Container header={<Header variant="h2">Linked {Synonyms.Assets}</Header>}>
-
+            <Container header={<Header variant="h2">Linked {Synonyms.Asset}s</Header>}>
                 <ColumnLayout columns={3} variant="text-grid">
                     {assetDetailState.assetLinksFe && (
                         <>
@@ -1229,17 +1221,17 @@ const AssetUploadReview = ({
                                 Object.keys(assetDetailState.assetLinksFe).map((linkType) => {
                                     let label = linkType;
                                     if (linkType === "parents") {
-                                        label = "Parent Repositories";
+                                        label = "Parent Assets";
                                     } else if (linkType === "child") {
-                                        label = "Child Repositories";
+                                        label = "Child Assets";
                                     } else if (linkType === "related") {
-                                        label = "Related Repositories";
+                                        label = "Related Assets";
                                     }
 
                                     const formattedValue =
                                         assetDetailState.assetLinksFe &&
                                         assetDetailState.assetLinksFe[
-                                        linkType as keyof typeof assetDetailState.assetLinksFe
+                                            linkType as keyof typeof assetDetailState.assetLinksFe
                                         ];
 
                                     return (
@@ -1249,10 +1241,10 @@ const AssetUploadReview = ({
                                             value={
                                                 Array.isArray(formattedValue)
                                                     ? formattedValue.map((asset) => (
-                                                        <div key={asset.assetId}>
-                                                            {asset.assetName}
-                                                        </div>
-                                                    ))
+                                                          <div key={asset.assetId}>
+                                                              {asset.assetName}
+                                                          </div>
+                                                      ))
                                                     : formattedValue
                                             }
                                         />
@@ -1262,9 +1254,7 @@ const AssetUploadReview = ({
                     )}
                 </ColumnLayout>
             </Container>
-            */}
 
-            {/* Repository Metadata hidden per request
             <Container header={<Header variant="h2">{Synonyms.Asset} Metadata</Header>}>
                 <ColumnLayout columns={2} variant="text-grid">
                     {Object.keys(metadata).map((k) => {
@@ -1278,7 +1268,6 @@ const AssetUploadReview = ({
                     })}
                 </ColumnLayout>
             </Container>
-            */}
             {allFiles.length > 0 && (
                 <FileUploadTable
                     allItems={allFiles}
@@ -1291,14 +1280,14 @@ const AssetUploadReview = ({
                             cell: (item: FileUploadTableItem) => {
                                 if (item.index === 99999) return "Preview File";
                                 if (item.name.includes(".previewFile.")) return "Preview File";
-                                return "Repository File";
+                                return "Asset File";
                             },
                             sortingField: "type",
                             sortingComparator: (a: FileUploadTableItem, b: FileUploadTableItem) => {
                                 const getType = (item: FileUploadTableItem) => {
                                     if (item.index === 99999) return "Preview File";
                                     if (item.name.includes(".previewFile.")) return "Preview File";
-                                    return "Repository File";
+                                    return "Asset File";
                                 };
                                 return getType(a).localeCompare(getType(b));
                             },
@@ -1345,7 +1334,7 @@ const UploadForm = () => {
     });
     const [isCancelVisible, setCancelVisible] = useState(false);
     const [showErrorsForPage, setShowErrorsForPage] = useState(-1);
-    const [validSteps, setValidSteps] = useState([false, false]);
+    const [validSteps, setValidSteps] = useState([false, false, false]);
 
     useEffect(() => {
         tags = [];
@@ -1364,7 +1353,7 @@ const UploadForm = () => {
                     ...assetDetailState,
                     Asset: fileUploadTableItems,
                 })
-                .then(() => { })
+                .then(() => {})
                 .catch(() => {
                     console.error("Error setting item in localforage");
                 });
@@ -1476,7 +1465,7 @@ const UploadForm = () => {
                         cancelButton: "Cancel",
                         previousButton: "Previous",
                         nextButton: "Next",
-                        submitButton: "Create Repository",
+                        submitButton: "Upload Object",
                         optional: "optional",
                     }}
                     isLoadingNextStep={freezeWizardButtons}
@@ -1523,7 +1512,6 @@ const UploadForm = () => {
                                 />
                             ),
                         },
-                        /* HIDDEN PER USER REQUEST
                         {
                             title: `${Synonyms.Asset} Metadata`,
                             content: (
@@ -1554,7 +1542,6 @@ const UploadForm = () => {
                             ),
                             isOptional: true,
                         },
-                        */
                         {
                             title: "Select Files to upload",
                             content: (
@@ -1562,16 +1549,16 @@ const UploadForm = () => {
                                     setFileUploadTableItems={setFileUploadTableItems}
                                     setValid={(v: boolean) => {
                                         const newValidSteps = [...validSteps];
-                                        newValidSteps[1] = v; // Changed index from 3 to 1 to reflect validSteps actual index used
+                                        newValidSteps[3] = v;
                                         setValidSteps(newValidSteps);
                                     }}
-                                    showErrors={showErrorsForPage >= 1} // Changed to 1
+                                    showErrors={showErrorsForPage >= 3}
                                 />
                             ),
                             isOptional: true,
                         },
                         {
-                            title: "Review and Complete",
+                            title: "Review and Upload",
                             content: (
                                 <AssetUploadReview
                                     metadata={metadata}
@@ -1599,7 +1586,7 @@ export default function AssetUploadPage() {
                 <Grid gridDefinition={[{ colspan: { default: 12 } }]}>
                     <div>
                         <TextContent>
-                            <Header variant="h1">Create {Synonyms.Asset}</Header>
+                            <Header variant="h1">Create and Upload {Synonyms.Asset}</Header>
                         </TextContent>
                         <UploadForm />
                     </div>

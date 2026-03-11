@@ -68,22 +68,28 @@ export const webRoutes = async (body) => {
  * @param {Object} params - Parameters object
  * @param {string} params.databaseId - Database ID
  * @param {string} params.assetId - Asset ID
- * @param {string} params.key - Optional key path for the file
- * @param {string} params.versionId - Optional version ID
- * @param {string} params.downloadType - Download type: "assetFile" (default) or "assetPreview"
+ * @param {string} [params.key] - Optional key path for the file
+ * @param {string} [params.versionId] - Optional version ID
+ * @param {string} [params.assetVersionId] - Optional asset version ID
+ * @param {string} [params.downloadType="assetFile"] - Download type: "assetFile" (default) or "assetPreview"
  * @returns {Promise<boolean|{message}|any>}
  */
 export const downloadAsset = async (
-    { databaseId, assetId, key, versionId, downloadType = "assetFile" },
+    { databaseId, assetId, key, versionId, assetVersionId = undefined, downloadType = "assetFile" },
     api = API
 ) => {
     try {
         // Build request body with new model structure
+        // Only include one version parameter — assetVersionId takes priority over versionId
         const body = {
             downloadType: downloadType,
             key: key,
-            versionId: versionId,
         };
+        if (assetVersionId) {
+            body.assetVersionId = assetVersionId;
+        } else if (versionId) {
+            body.versionId = versionId;
+        }
 
         const response = await api.post(
             "api",
@@ -1922,6 +1928,7 @@ export const fetchAssetS3Files = async (
  * @param {boolean} params.basic - Whether to use basic mode (faster, less data)
  * @param {string|null} params.startingToken - Pagination token
  * @param {number} params.pageSize - Page size (default: 1500 for basic, 100 for detailed)
+ * @param {string|null} [params.assetVersionId] - Asset version ID to filter files (optional)
  * @returns {Promise<{success: boolean, items: Array, nextToken: string|null, error: string|null}>}
  */
 export const fetchAssetS3FilesPage = async (
@@ -1932,6 +1939,7 @@ export const fetchAssetS3FilesPage = async (
         basic = false,
         startingToken = null,
         pageSize = null,
+        assetVersionId = null,
     },
     api = API
 ) => {
@@ -1957,6 +1965,10 @@ export const fetchAssetS3FilesPage = async (
 
         if (startingToken) {
             queryParams.startingToken = startingToken;
+        }
+
+        if (assetVersionId) {
+            queryParams.assetVersionId = assetVersionId;
         }
 
         const response = await api.get(
@@ -2019,10 +2031,18 @@ export const fetchAssetS3FilesPage = async (
  * @param {boolean} params.includeArchived - Whether to include archived files
  * @param {boolean} params.basic - Whether to use basic mode
  * @param {number} [params.pageSize] - Page size (optional)
+ * @param {string|null} [params.assetVersionId] - Asset version ID to filter files (optional)
  * @yields {Object} Page result with items and metadata
  */
 export async function* fetchAssetS3FilesStreaming(
-    { databaseId, assetId, includeArchived = false, basic = false, pageSize },
+    {
+        databaseId,
+        assetId,
+        includeArchived = false,
+        basic = false,
+        pageSize,
+        assetVersionId = null,
+    },
     api = API
 ) {
     let nextToken = null;
@@ -2031,7 +2051,15 @@ export async function* fetchAssetS3FilesStreaming(
     do {
         pageNumber++;
         const result = await fetchAssetS3FilesPage(
-            { databaseId, assetId, includeArchived, basic, startingToken: nextToken, pageSize },
+            {
+                databaseId,
+                assetId,
+                includeArchived,
+                basic,
+                startingToken: nextToken,
+                pageSize,
+                assetVersionId,
+            },
             api
         );
 

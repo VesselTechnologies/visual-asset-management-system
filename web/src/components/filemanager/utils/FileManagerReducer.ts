@@ -68,17 +68,22 @@ function findItemByPath(tree: FileTree, path: string): FileTree | null {
 }
 
 // Helper function to apply filters to the tree
-function applyFilters(tree: FileTree, showArchived: boolean): FileTree {
+function applyFilters(tree: FileTree, showArchived: boolean, showNonIncluded: boolean): FileTree {
     // Create a copy of the tree
     const filteredTree = { ...tree };
 
     // Filter subTree recursively
     if (filteredTree.subTree && filteredTree.subTree.length > 0) {
         filteredTree.subTree = filteredTree.subTree
-            .map((child) => applyFilters(child, showArchived))
+            .map((child) => applyFilters(child, showArchived, showNonIncluded))
             .filter((child) => {
                 // Apply showArchived filter
                 if (!showArchived && child.isArchived) {
+                    return false;
+                }
+
+                // Apply showNonIncluded filter
+                if (showNonIncluded && !child.currentAssetVersionFileVersionMismatch) {
                     return false;
                 }
 
@@ -169,15 +174,15 @@ export function fileManagerReducer(
                 // Combine with existing selection if ctrl is also pressed
                 const newSelectedItems = ctrlKey
                     ? [
-                        ...state.selectedItems,
-                        ...itemsInRange.filter(
-                            (rangeItem) =>
-                                !state.selectedItems.some(
-                                    (selectedItem) =>
-                                        selectedItem.relativePath === rangeItem.relativePath
-                                )
-                        ),
-                    ]
+                          ...state.selectedItems,
+                          ...itemsInRange.filter(
+                              (rangeItem) =>
+                                  !state.selectedItems.some(
+                                      (selectedItem) =>
+                                          selectedItem.relativePath === rangeItem.relativePath
+                                  )
+                          ),
+                      ]
                     : itemsInRange;
 
                 return {
@@ -224,7 +229,13 @@ export function fileManagerReducer(
 
         case "DOWNLOAD_FILE":
             const handleDownloadFile = async () => {
-                await downloadFile(state.assetId, state.databaseId, action.payload.key);
+                await downloadFile(
+                    state.assetId,
+                    state.databaseId,
+                    action.payload.key,
+                    action.payload.versionId || "",
+                    action.payload.assetVersionId || state.assetVersionId
+                );
             };
             handleDownloadFile();
             return state;
@@ -322,6 +333,24 @@ export function fileManagerReducer(
                 loading: true,
             };
 
+        case "TOGGLE_SHOW_NON_INCLUDED":
+            // This filter is client-side only, no need to refetch data
+            // Re-apply filters to the UNFILTERED tree to get correct results
+            const toggledShowNonIncluded = !state.showNonIncluded;
+            const reFilteredTree = applyFilters(
+                state.unfilteredFileTree,
+                state.showArchived,
+                toggledShowNonIncluded
+            );
+            const reFilteredFlattenedItems = flattenFileTree(reFilteredTree);
+
+            return {
+                ...state,
+                showNonIncluded: toggledShowNonIncluded,
+                fileTree: reFilteredTree,
+                flattenedItems: reFilteredFlattenedItems,
+                // Don't trigger refresh or set loading
+            };
 
         case "MERGE_FILES": {
             // 1. Merge new files into UNFILTERED tree to preserve all data
@@ -342,7 +371,8 @@ export function fileManagerReducer(
             // 2. Apply current filters to create the display tree
             const filteredTree = applyFilters(
                 mergedUnfilteredTree,
-                state.showArchived
+                state.showArchived,
+                state.showNonIncluded
             );
 
             // 3. Update flattened items
@@ -369,7 +399,7 @@ export function fileManagerReducer(
                 // For on-demand fetch, look in unfiltered tree first to get the updated data
                 const foundItem = isOnDemandFetch
                     ? findItemByPath(mergedUnfilteredTree, state.selectedItemPath) ||
-                    findItemByPath(filteredTree, state.selectedItemPath)
+                      findItemByPath(filteredTree, state.selectedItemPath)
                     : findItemByPath(filteredTree, state.selectedItemPath);
 
                 if (foundItem) {
@@ -557,6 +587,13 @@ export function fileManagerReducer(
                 flattenedItems: updatedFlattenedItems,
             };
         }
+
+        case "SET_READ_ONLY":
+            return {
+                ...state,
+                readOnly: action.payload.readOnly,
+                assetVersionId: action.payload.assetVersionId,
+            };
 
         default:
             return state;

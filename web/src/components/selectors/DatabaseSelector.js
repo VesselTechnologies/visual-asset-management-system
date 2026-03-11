@@ -25,20 +25,14 @@ const DatabaseSelector = (props) => {
         }
     }, [reload]);
 
-    // Filter out reserved databases that should not be user-selectable
-    const visibleItems = React.useMemo(
-        () => allItems.filter((item) => item.databaseId !== "PUBLIC"),
-        [allItems]
-    );
-
     // Create a map of databaseId to full database object for easy lookup
     const databaseMap = React.useMemo(() => {
         const map = {};
-        visibleItems.forEach((item) => {
+        allItems.forEach((item) => {
             map[item.databaseId] = item;
         });
         return map;
-    }, [visibleItems]);
+    }, [allItems]);
 
     // Wrap the onChange to include the full database object (backwards compatible)
     const handleChange = (event) => {
@@ -69,7 +63,7 @@ const DatabaseSelector = (props) => {
             onChange={handleChange}
             options={[
                 ...(showGlobal ? [{ label: "GLOBAL", value: "GLOBAL" }] : []),
-                ...visibleItems.map((item) => {
+                ...allItems.map((item) => {
                     return {
                         label: item.databaseId,
                         value: item.databaseId,
