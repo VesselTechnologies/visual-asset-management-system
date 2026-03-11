@@ -57,4 +57,15 @@ VAMS_PASSWORD=your_password
 
 When `piart` detects a "Token Expired" error, it will silently log you back in using these credentials and automatically retry your original command so you don't have to break your workflow. It checks the local `.env` first, then falls back to `~/.piart.env`.
 
+## Troubleshooting
 
+**Command not found: piart**
+
+If you run `piart` after successful installation and see `command not found`, `pip` installed the executable into a user directory that is not in your system's `PATH` variable (this often looks like `~/.local/bin` or `~/Library/Python/3.x/bin` on macOS/Linux). 
+
+You have two options:
+1. **(Recommended)** Add the pip binary directory to your system `PATH` in your `~/.bashrc` or `~/.zshrc` file.
+2. **Fallback:** You can always invoke the CLI directly through Python using:
+   ```bash
+   python -m piart repos list
+   ```
