@@ -13,59 +13,7 @@ import Grid from "@cloudscape-design/components/grid";
 import SpaceBetween from "@cloudscape-design/components/space-between";
 
 import "../styles/landing-page.scss";
-
-// Custom code block component with copy functionality
-const CodeBlock = ({ children, multiline = false }) => {
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = async () => {
-        try {
-            await navigator.clipboard.writeText(children);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch (err) {
-            console.error('Failed to copy: ', err);
-        }
-    };
-
-    return (
-        <div style={{ 
-            display: 'flex',
-            alignItems: 'center',
-            backgroundColor: '#232f3e', 
-            border: '1px solid #414d5c', 
-            borderRadius: '8px', 
-            padding: multiline ? '16px' : '12px 16px',
-            marginTop: '8px',
-            fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
-            fontSize: '14px',
-            color: '#ffffff',
-            overflow: 'auto'
-        }}>
-            <pre style={{ 
-                margin: 0, 
-                marginRight: '12px',
-                flex: 1,
-                whiteSpace: multiline ? 'pre-wrap' : 'nowrap',
-                wordBreak: multiline ? 'break-word' : 'normal'
-            }}>
-                {children}
-            </pre>
-            <Button
-                variant="icon"
-                iconName={copied ? "check" : "copy"}
-                onClick={handleCopy}
-                ariaLabel={copied ? "Copied!" : "Copy to clipboard"}
-                size="small"
-                style={{
-                    backgroundColor: copied ? '#1d8102' : '#414d5c',
-                    border: 'none',
-                    flexShrink: 0
-                }}
-            />
-        </div>
-    );
-};
+import { CodeBlock } from "../components/common/CodeBlock";
 
 const LandingPage = () => {
     return (
@@ -250,7 +198,7 @@ pip install https://tiamat.vessel-technologies.com/piart.whl
                                                 Login to your account:
                                             </Box>
                                             <CodeBlock>
-piart auth login -u {'{'}your_username{'}'}
+{`piart auth login -u {your_username}`}
                                             </CodeBlock>
                                         </div>
                                     </SpaceBetween>
@@ -283,7 +231,7 @@ piart repos list
                                                 First, identify the repository ID from the list above, then view its contents:
                                             </Box>
                                             <CodeBlock>
-piart file list -d {'{'}database{'}'} -a {'{'}repository_id{'}'}
+{`piart file list -d {database} -a {repository_id}`}
                                             </CodeBlock>
                                             <Box variant="p">
                                                 <em>Example output: You'll see a directory structure with files like `/Locomotion/2-StoryStaircase/Loft.usd`</em>
@@ -300,7 +248,7 @@ piart file list -d {'{'}database{'}'} -a {'{'}repository_id{'}'}
                                                         <strong>Download a specific file:</strong>
                                                     </Box>
                                                     <CodeBlock>
-piart repos download . -d {'{'}database{'}'} -a {'{'}repository_id{'}'} --file-key "{'{'}file_path{'}'}"
+{`piart repos download . -d {database} -a {repository_id} --file-key "{file_path}"`}
                                                     </CodeBlock>
                                                     <Box variant="p">
                                                         <em>Example:</em>
@@ -314,7 +262,7 @@ piart repos download . -d PUBLIC -a xda7e0ee0-3d87-4288-94d7-0b0017bd5f0c --file
                                                         <strong>Download an entire repository:</strong>
                                                     </Box>
                                                     <CodeBlock>
-piart repos download /local/path -d {'{'}database{'}'} -a {'{'}repository_id{'}'}
+{`piart repos download /local/path -d {database} -a {repository_id}`}
                                                     </CodeBlock>
                                                 </div>
                                             </SpaceBetween>
@@ -328,7 +276,7 @@ piart repos download /local/path -d {'{'}database{'}'} -a {'{'}repository_id{'}'
                                                 Upload a file to a repository:
                                             </Box>
                                             <CodeBlock>
-piart file upload -d {'{'}database{'}'} -a {'{'}repository_id{'}'} /path/to/your/file.usd
+{`piart file upload -d {database} -a {repository_id} /path/to/your/file.usd`}
                                             </CodeBlock>
                                         </div>
                                     </SpaceBetween>
