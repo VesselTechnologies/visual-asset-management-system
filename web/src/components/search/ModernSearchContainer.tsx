@@ -17,6 +17,7 @@ import { useToasts } from "./hooks/useToasts";
 import { useDebounce } from "./hooks/useDebounce";
 import { SearchTopBar, SearchSidebar } from "./SearchLayout";
 import CardView from "./SearchResults/CardView";
+import RepositoryCardView from "./SearchResults/RepositoryCardView";
 import ToastManager from "./SearchNotifications/ToastManager";
 import SearchPageListView from "./SearchPageListView";
 import SearchPageMapView from "./SearchPageMapView";
@@ -77,14 +78,24 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
             (view) => view === "table" || view === "card" || (view === "map" && useMapView)
         );
 
+        // Default to card view if available  
+        if (supportedViews.includes("card")) {
+            return "card";
+        }
+
         if (supportedViews.includes(preferences.viewMode as any)) {
             return preferences.viewMode as "table" | "card" | "map";
         }
+        
         return supportedViews[0] as "table" | "card" | "map";
     });
     const [autoRefreshing, setAutoRefreshing] = useState(false);
     const [hasInitialLoad, setHasInitialLoad] = useState(false);
     const [sidebarWidth, setSidebarWidth] = useState(preferences.sidebarWidth || 400);
+
+    // State for NoOpenSearch fallback
+    const [noSearchItems, setNoSearchItems] = useState<any[]>([]);
+    const [noSearchLoading, setNoSearchLoading] = useState(true);
 
     // Initialize search query if provided
     useEffect(() => {
@@ -149,12 +160,66 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
         }
     }, [currentView, preferences.viewMode]);
 
+    // Ensure card view as default for assets after preferences load
+    useEffect(() => {
+        if (preferencesLoaded && recordType === "asset" && allowedViews.includes("card") && currentView !== "card") {
+            setCurrentView("card");
+        }
+    }, [preferencesLoaded, recordType, allowedViews]);
+
     // Notify parent of selection changes
     useEffect(() => {
         if (onSelectionChange) {
             onSelectionChange(searchState.selectedItems);
         }
     }, [searchState.selectedItems, onSelectionChange]);
+
+    // Load assets for NoOpenSearch mode
+    useEffect(() => {
+        if (useNoOpenSearch) {
+            const loadAssets = async () => {
+                try {
+                    setNoSearchLoading(true);
+                    let assets;
+                    if (databaseId) {
+                        assets = await fetchDatabaseAssets({ 
+                            databaseId, 
+                            showArchived: false, 
+                            maxItems: 100, 
+                            pageSize: 50, 
+                            startingToken: "" 
+                        });
+                    } else {
+                        assets = await fetchAllAssets();
+                    }
+                    
+                    if (assets && Array.isArray(assets)) {
+                        // Convert to search result format
+                        const searchResults = assets.map(asset => ({
+                            _id: asset.assetId,
+                            _source: {
+                                str_assetid: asset.assetId,
+                                str_databaseid: asset.databaseId,
+                                str_assetname: asset.assetName,
+                                str_description: asset.description,
+                                str_assettype: asset.assetType,
+                                list_tags: asset.tags || [],
+                                date_created: asset.createdTimestamp,
+                                str_createdby: asset.createdBy,
+                            }
+                        }));
+                        setNoSearchItems(searchResults);
+                    }
+                } catch (error) {
+                    console.error("Error loading assets:", error);
+                    setNoSearchItems([]);
+                } finally {
+                    setNoSearchLoading(false);
+                }
+            };
+            loadAssets();
+        }
+    }, [useNoOpenSearch, databaseId]);
 
     const handleSearch = async () => {
         try {
@@ -416,20 +481,18 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
         totalResults: searchState.result?.hits?.total?.value,
     });
 
-    // Render fallback for NoOpenSearch mode
+    // Render fallback for NoOpenSearch mode using our card view
     if (useNoOpenSearch) {
         return (
             <Box>
-                <ListPage
-                    singularName={Synonyms.Asset}
-                    singularNameTitleCase={Synonyms.Asset}
-                    pluralName={Synonyms.assets}
-                    pluralNameTitleCase={Synonyms.Assets}
-                    onCreateCallback={handleCreateAsset}
-                    listDefinition={AssetListDefinition}
-                    fetchAllElements={fetchAllAssets}
-                    fetchElements={fetchDatabaseAssets}
-                    hideDeleteButton={true}
+                <RepositoryCardView
+                    items={noSearchItems}
+                    loading={noSearchLoading}
+                    currentPageIndex={1}
+                    pagesCount={Math.ceil(noSearchItems.length / preferences.pageSize)}
+                    onPageChange={() => {}}
+                    onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
+                    totalItems={noSearchItems.length}
                 />
             </Box>
         );
@@ -443,10 +506,9 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
         if (allowedViews.includes("table")) {
             viewOptions.push({ text: "Table", id: "table" });
         }
-        // Hide Grid view for now - not fully fleshed out
-        // if (allowedViews.includes('card')) {
-        //     viewOptions.push({ text: 'Grid', id: 'card' });
-        // }
+        if (allowedViews.includes("card")) {
+            viewOptions.push({ text: "Cards", id: "card" });
+        }
         if (allowedViews.includes("map") && useMapView && recordType === "asset") {
             viewOptions.push({ text: "Map", id: "map" });
         }
@@ -467,28 +529,46 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     const renderContent = () => {
         switch (currentView) {
             case "card":
-                return (
-                    <CardView
-                        items={searchState.result?.hits?.hits || []}
-                        selectedItems={searchState.selectedItems}
-                        onSelectionChange={searchState.setSelectedItems}
-                        loading={searchState.loading}
-                        cardSize={preferences.cardSize}
-                        showThumbnails={preferences.showThumbnails}
-                        recordType={recordType}
-                        onOpenPreview={() => { }}
-                        currentPageIndex={currentPage}
-                        pagesCount={pageCount}
-                        onPageChange={(pageIndex) =>
-                            handlePagination((pageIndex - 1) * preferences.pageSize)
-                        }
-                        onPreferencesChange={showPreferences ? handlePreferencesChange : undefined}
-                        preferences={preferences}
-                        onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
-                        onDeleteSelected={showBulkActions ? () => { } : undefined}
-                        totalItems={searchState.result?.hits?.total?.value}
-                    />
-                );
+                if (recordType === "asset") {
+                    // Use new simplified repository card view for assets/repositories
+                    return (
+                        <RepositoryCardView
+                            items={searchState.result?.hits?.hits || []}
+                            loading={searchState.loading}
+                            currentPageIndex={currentPage}
+                            pagesCount={pageCount}
+                            onPageChange={(pageIndex) =>
+                                handlePagination((pageIndex - 1) * preferences.pageSize)
+                            }
+                            onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
+                            totalItems={searchState.result?.hits?.total?.value}
+                        />
+                    );
+                } else {
+                    // Use original CardView for files
+                    return (
+                        <CardView
+                            items={searchState.result?.hits?.hits || []}
+                            selectedItems={searchState.selectedItems}
+                            onSelectionChange={searchState.setSelectedItems}
+                            loading={searchState.loading}
+                            cardSize={preferences.cardSize}
+                            showThumbnails={preferences.showThumbnails}
+                            recordType={recordType}
+                            onOpenPreview={() => { }}
+                            currentPageIndex={currentPage}
+                            pagesCount={pageCount}
+                            onPageChange={(pageIndex) =>
+                                handlePagination((pageIndex - 1) * preferences.pageSize)
+                            }
+                            onPreferencesChange={showPreferences ? handlePreferencesChange : undefined}
+                            preferences={preferences}
+                            onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
+                            onDeleteSelected={showBulkActions ? () => { } : undefined}
+                            totalItems={searchState.result?.hits?.total?.value}
+                        />
+                    );
+                }
 
             case "map":
                 if (useMapView && recordType === "asset") {
