@@ -11,11 +11,29 @@ import os
 import re
 import sys
 import subprocess
+import shutil
 
 try:
     from dotenv import load_dotenv
 except ImportError:
     pass
+
+
+def _check_vamscli_available():
+    """Check if vamscli is available and try to install bundled version if needed."""
+    # First check if vamscli command is available
+    if shutil.which('vamscli'):
+        return True
+        
+    # If not available, try to install bundled version
+    try:
+        from .install_bundled import install_bundled_vamscli
+        if install_bundled_vamscli():
+            return True
+    except Exception as e:
+        print(f"Warning: Could not install bundled vamscli: {e}")
+        
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -43,6 +61,7 @@ _TEXT_OUT_PATTERNS = [
     (re.compile(r'\basset\b'),  'repo'),
     # Translate the binary name so help text refers to 'piart'
     (re.compile(r'\bvamscli\b'), 'piart'),
+    (re.compile(r'\bVamsCLI\b'), 'PiartCLI'),
 ]
 
 
@@ -83,20 +102,50 @@ def _run_interactive(cmd: list) -> int:
     auth_expired = [False]
 
     def _pipe_and_translate(src, dst, is_stderr=False):
-        """Read lines from src, translate, write to dst."""
+        """Read character by character from src, translate, write to dst with word boundary awareness."""
         # Use a text-mode wrapper around the raw pipe
         reader = io.TextIOWrapper(src, encoding='utf-8', errors='replace')
+        buffer = ""
+        output_buffer = ""
+        
         try:
-            for line in reader:
+            while True:
                 if auth_expired[0]:
                     return
-                # Check for auth error
-                if is_stderr and ("Token Expired" in line or "Authentication Error" in line or "token has expired" in line.lower()):
+                char = reader.read(1)
+                if not char:  # EOF
+                    # Flush any remaining buffer
+                    if output_buffer:
+                        translated = _translate_output(output_buffer)
+                        dst.write(translated)
+                        dst.flush()
+                    break
+                    
+                buffer += char
+                output_buffer += char
+                
+                # Check for auth error on complete lines
+                if char == '\n' and is_stderr and ("Token Expired" in buffer or "Authentication Error" in buffer or "token has expired" in buffer.lower()):
                     auth_expired[0] = True
                     return
                 
-                dst.write(_translate_output(line))
-                dst.flush()
+                # If we hit a word boundary or whitespace, translate and output the accumulated text
+                if char in ' \t\n\r' or not char.isalnum():
+                    if output_buffer:
+                        translated = _translate_output(output_buffer)
+                        dst.write(translated)
+                        dst.flush()
+                        output_buffer = ""
+                # If the output buffer gets too long (for very long words), flush it
+                elif len(output_buffer) > 50:
+                    translated = _translate_output(output_buffer)
+                    dst.write(translated)
+                    dst.flush()
+                    output_buffer = ""
+                
+                # Clear main buffer on newline to avoid accumulating too much
+                if char == '\n':
+                    buffer = ""
         except Exception:
             pass
 
@@ -211,6 +260,11 @@ def main() -> None:
         if os.path.exists(global_env):
             load_dotenv(global_env)
 
+    # Ensure vamscli is available (install bundled version if needed)
+    if not _check_vamscli_available():
+        print("\n❌ Error: Unable to set up vamscli dependency.")
+        print("The bundled vamscli installation failed.")
+        sys.exit(1)
         
     user_args = sys.argv[1:]
     vamscli_args = _translate_args(user_args)

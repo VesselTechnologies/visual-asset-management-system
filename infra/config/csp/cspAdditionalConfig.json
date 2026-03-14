@@ -2,7 +2,7 @@
     "connectSrc": [],
     "scriptSrc": [],
     "workerSrc": [],
-    "imgSrc": [],
+    "imgSrc": ["https://img.youtube.com"],
     "mediaSrc": [],
     "fontSrc": [],
     "styleSrc": []
