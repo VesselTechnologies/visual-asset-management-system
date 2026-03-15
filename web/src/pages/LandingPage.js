@@ -183,10 +183,22 @@ const LandingPage = () => {
                                                 1. Install the CLI
                                             </Box>
                                             <Box variant="p">
-                                                Ensure <strong>Python</strong> and <strong>pip</strong> are installed, then run:
+                                                First, install <strong>uv</strong> by following the instructions at: <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank" rel="noopener noreferrer">https://docs.astral.sh/uv/getting-started/installation/</a>
+                                            </Box>
+                                            <Box variant="p">
+                                                Then install the PI-ART CLI:
+                                            </Box>
+                                            <Box variant="p">
+                                                <strong>Global installation (recommended):</strong>
                                             </Box>
                                             <CodeBlock>
-                                                pip install https://tiamat.vessel-technologies.com/piart*.whl https://tiamat.vessel-technologies.com/vamscli*.whl
+                                                uvx tool install https://tiamat.vessel-technologies.com/piart-0.1.0-py3-none-any.whl
+                                            </CodeBlock>
+                                            <Box variant="p">
+                                                <strong>Virtual environment installation:</strong>
+                                            </Box>
+                                            <CodeBlock>
+                                                uv tool install https://tiamat.vessel-technologies.com/piart-0.1.0-py3-none-any.whl
                                             </CodeBlock>
                                         </div>
 
