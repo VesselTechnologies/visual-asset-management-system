@@ -20,6 +20,7 @@ import {
     SpaceBetween,
     Spinner,
 } from "@cloudscape-design/components";
+import StatusIndicator from "@cloudscape-design/components/status-indicator";
 import { useLocation, useNavigate, useParams } from "react-router";
 
 import FileMetadata from "../metadata/FileMetadata";
@@ -52,6 +53,7 @@ interface ViewFileState {
     key?: string;
     isDirectory?: boolean;
     versionId?: string;
+    assetVersionId?: string;
     size?: number;
     dateCreatedCurrentVersion?: string;
     isArchived?: boolean;
@@ -127,8 +129,15 @@ export default function ViewFile() {
         return searchParams.get("version");
     };
 
+    // Extract asset version from query parameters
+    const getAssetVersionFromQuery = (): string | null => {
+        const searchParams = new URLSearchParams(location.search);
+        return searchParams.get("assetVersion");
+    };
+
     const urlFilePath = getFilePathFromUrl();
     const urlVersion = getVersionFromQuery();
+    const urlAssetVersion = getAssetVersionFromQuery();
     const isDirectPathAccess = urlFilePath && !state;
 
     // State for direct path loading
@@ -152,47 +161,50 @@ export default function ViewFile() {
     const singleFileInfo = isMultiFileMode
         ? null
         : state?.key && state?.versionId
-        ? {
-              // State has full data including versionId - use it directly
-              filename: state?.filename || "",
-              key: state?.key || "",
-              isDirectory: state?.isDirectory || false,
-              versionId: state?.versionId,
-              size: state?.size,
-              dateCreatedCurrentVersion: state?.dateCreatedCurrentVersion,
-              isArchived: state?.isArchived,
-              primaryType: state?.primaryType,
-              previewFile: state?.previewFile,
-          }
-        : state?.key && !state?.versionId && loadedFileInfo?.versionId
-        ? // State has key but no versionId, and we've fetched version info - use loadedFileInfo
-          loadedFileInfo
-        : state?.key
-        ? {
-              // State has key but no versionId yet (version fetch in progress or not started)
-              filename: state?.filename || "",
-              key: state?.key || "",
-              isDirectory: state?.isDirectory || false,
-              versionId: undefined, // Will be populated by version fetch
-              size: state?.size,
-              dateCreatedCurrentVersion: state?.dateCreatedCurrentVersion,
-              isArchived: state?.isArchived,
-              primaryType: state?.primaryType,
-              previewFile: state?.previewFile,
-          }
-        : loadedFileInfo
-        ? loadedFileInfo
-        : {
-              filename: "",
-              key: "",
-              isDirectory: false,
-              versionId: undefined,
-              size: undefined,
-              dateCreatedCurrentVersion: undefined,
-              isArchived: undefined,
-              primaryType: undefined,
-              previewFile: undefined,
-          };
+            ? {
+                // State has full data including versionId - use it directly
+                filename: state?.filename || "",
+                key: state?.key || "",
+                isDirectory: state?.isDirectory || false,
+                versionId: state?.versionId,
+                size: state?.size,
+                dateCreatedCurrentVersion: state?.dateCreatedCurrentVersion,
+                isArchived: state?.isArchived,
+                primaryType: state?.primaryType,
+                previewFile: state?.previewFile,
+            }
+            : state?.key && !state?.versionId && loadedFileInfo?.versionId
+                ? // State has key but no versionId, and we've fetched version info - use loadedFileInfo
+                loadedFileInfo
+                : state?.key
+                    ? {
+                        // State has key but no versionId yet (version fetch in progress or not started)
+                        filename: state?.filename || "",
+                        key: state?.key || "",
+                        isDirectory: state?.isDirectory || false,
+                        versionId: undefined, // Will be populated by version fetch
+                        size: state?.size,
+                        dateCreatedCurrentVersion: state?.dateCreatedCurrentVersion,
+                        isArchived: state?.isArchived,
+                        primaryType: state?.primaryType,
+                        previewFile: state?.previewFile,
+                    }
+                    : loadedFileInfo
+                        ? loadedFileInfo
+                        : {
+                            filename: "",
+                            key: "",
+                            isDirectory: false,
+                            versionId: undefined,
+                            size: undefined,
+                            dateCreatedCurrentVersion: undefined,
+                            isArchived: undefined,
+                            primaryType: undefined,
+                            previewFile: undefined,
+                        };
+
+    // Compute effective asset version ID from URL query param or navigation state
+    const effectiveAssetVersionId = urlAssetVersion || state?.assetVersionId || undefined;
 
     // Check if any files are archived
     const hasArchivedFiles = isMultiFileMode
@@ -402,6 +414,7 @@ export default function ViewFile() {
             if (
                 !state?.key ||
                 state?.versionId ||
+                effectiveAssetVersionId ||
                 isMultiFileMode ||
                 isLoadingVersionInfo ||
                 isLoadingDirectPath
@@ -525,6 +538,11 @@ export default function ViewFile() {
 
     // Update URL when version changes to keep URL copy/paste accurate
     useEffect(() => {
+        // Skip URL sync when using assetVersionId — the URL already has ?assetVersion=X
+        if (effectiveAssetVersionId) {
+            return;
+        }
+
         // Only update URL for single file mode with a valid file key and version
         if (isMultiFileMode || !singleFileInfo?.key || !singleFileInfo?.versionId) {
             return;
@@ -555,8 +573,7 @@ export default function ViewFile() {
 
         // Get current URL path and query
         const currentPath = location.pathname;
-        const currentSearch = location.search;
-        const currentFullPath = currentPath + currentSearch;
+
 
         // Only update if the URL has changed (to avoid infinite loops)
         // Compare the expected URL structure
@@ -572,6 +589,7 @@ export default function ViewFile() {
             }
         }
     }, [
+        effectiveAssetVersionId,
         singleFileInfo?.versionId,
         singleFileInfo?.key,
         databaseId,
@@ -711,12 +729,19 @@ export default function ViewFile() {
                                             </span>
                                         </div>
                                     )}
+                                    {effectiveAssetVersionId && (
+                                        <Box margin={{ top: "xxs" }}>
+                                            <StatusIndicator type="info">
+                                                {`Asset Version: v${effectiveAssetVersionId}`}
+                                            </StatusIndicator>
+                                        </Box>
+                                    )}
                                 </div>
 
                                 {/* Main content area with horizontal splitter */}
                                 <div style={{ height: "calc(100vh - 200px)", minHeight: "400px" }}>
                                     {(!isMultiFileMode ? !singleFileInfo?.isDirectory : true) &&
-                                    !hasArchivedFiles ? (
+                                        !hasArchivedFiles ? (
                                         <HorizontalResizableSplitter
                                             topPanel={
                                                 <div
@@ -724,28 +749,34 @@ export default function ViewFile() {
                                                     className={viewerMode}
                                                 >
                                                     <DynamicViewer
-                                                        key={`${viewType}-${assetId}-${
+                                                        key={`${viewType}-${assetId}-${effectiveAssetVersionId ||
                                                             singleFileInfo?.versionId ||
                                                             "no-version"
-                                                        }`} // Force remount on tab switch
+                                                            }`} // Force remount on tab/version switch
                                                         files={
                                                             isMultiFileMode || viewType === "files"
                                                                 ? currentFiles
                                                                 : singleFileInfo
-                                                                ? [
-                                                                      {
-                                                                          ...singleFileInfo,
-                                                                          key:
-                                                                              viewType === "preview"
-                                                                                  ? singleFileInfo.previewFile ||
+                                                                    ? [
+                                                                        {
+                                                                            ...singleFileInfo,
+                                                                            // Clear versionId when using assetVersionId — let the viewer resolve via assetVersionId
+                                                                            versionId:
+                                                                                effectiveAssetVersionId
+                                                                                    ? undefined
+                                                                                    : singleFileInfo.versionId,
+                                                                            key:
+                                                                                viewType === "preview"
+                                                                                    ? singleFileInfo.previewFile ||
                                                                                     singleFileInfo.key
-                                                                                  : singleFileInfo.key,
-                                                                      },
-                                                                  ]
-                                                                : []
+                                                                                    : singleFileInfo.key,
+                                                                        },
+                                                                    ]
+                                                                    : []
                                                         }
                                                         assetId={assetId!}
                                                         databaseId={databaseId!}
+                                                        assetVersionId={effectiveAssetVersionId}
                                                         viewerMode={viewerMode}
                                                         onViewerModeChange={changeViewerMode}
                                                         showViewerSelector={true} // Enable plugin-based viewer selection
@@ -786,7 +817,7 @@ export default function ViewFile() {
                                                                             {file.filename}
                                                                             {file.primaryType &&
                                                                                 file.primaryType.trim() !==
-                                                                                    "" && (
+                                                                                "" && (
                                                                                     <span
                                                                                         style={{
                                                                                             color: "#666",
@@ -829,6 +860,7 @@ export default function ViewFile() {
                                                             prefix={singleFileInfo.key}
                                                             showHeader={false}
                                                             className="viewfile-metadata"
+                                                            assetVersionId={effectiveAssetVersionId}
                                                         />
                                                     )}
 
@@ -837,7 +869,8 @@ export default function ViewFile() {
                                                         singleFileInfo &&
                                                         singleFileInfo.key &&
                                                         !singleFileInfo.isDirectory &&
-                                                        singleFileInfo.versionId && (
+                                                        (singleFileInfo.versionId ||
+                                                            effectiveAssetVersionId) && (
                                                             <Container
                                                                 header={
                                                                     <Header variant="h3">
@@ -860,6 +893,9 @@ export default function ViewFile() {
                                                                     }
                                                                     displayMode="container"
                                                                     visible={true}
+                                                                    assetVersionId={
+                                                                        effectiveAssetVersionId
+                                                                    }
                                                                 />
                                                             </Container>
                                                         )}

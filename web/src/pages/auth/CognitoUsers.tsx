@@ -21,6 +21,7 @@ export const CognitoUsersListDefinition = new ListDefinition({
         "email",
         "phone",
         "userStatus",
+        "mfaEnabled",
         "userCreateDate",
         "userLastModifiedDate",
     ],
@@ -154,10 +155,19 @@ export default function CognitoUsers() {
                         allItems={allItems}
                         loading={loading}
                         listDefinition={CognitoUsersListDefinition}
-                        editEnabled={false}
+                        editEnabled={true}
                         setReload={setReload}
                         onReload={reloadData}
                         hideDeleteButton={true}
+                        UpdateSelectedElement={CreateCognitoUser}
+                        customHeaderActions={
+                            <Button
+                                disabled={selectedItems.length !== 1}
+                                onClick={() => setResetPasswordOpen(true)}
+                            >
+                                Reset Password
+                            </Button>
+                        }
                         onSelectionChange={(items: any[]) => setSelectedItems(items)}
                         createNewElement={
                             <div style={{ float: "right" }}>

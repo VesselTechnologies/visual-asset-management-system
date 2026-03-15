@@ -5,8 +5,16 @@
     "version": "1.0"
   },
   "variables": [
-    {"name": "ROLE_NAME", "required": true, "description": "The existing role to add the deny constraint to"},
-    {"name": "TAG_VALUE", "required": true, "description": "The tag value to deny editing for (e.g., 'locked', 'approved', 'production')"}
+    {
+      "name": "ROLE_NAME",
+      "required": true,
+      "description": "The existing role to add the deny constraint to"
+    },
+    {
+      "name": "TAG_VALUE",
+      "required": true,
+      "description": "The tag value to deny editing for (e.g., 'locked', 'approved', 'production')"
+    }
   ],
   "constraints": [
     {
@@ -14,13 +22,26 @@
       "description": "Deny editing of assets tagged with '{{TAG_VALUE}}'",
       "objectType": "asset",
       "criteriaAnd": [
-        {"field": "tags", "operator": "contains", "value": "{{TAG_VALUE}}"}
+        {
+          "field": "tags",
+          "operator": "contains",
+          "value": "{{TAG_VALUE}}"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "PUT", "type": "deny"},
-        {"action": "POST", "type": "deny"},
-        {"action": "DELETE", "type": "deny"}
+        {
+          "action": "PUT",
+          "type": "deny"
+        },
+        {
+          "action": "POST",
+          "type": "deny"
+        },
+        {
+          "action": "DELETE",
+          "type": "deny"
+        }
       ]
     }
   ]

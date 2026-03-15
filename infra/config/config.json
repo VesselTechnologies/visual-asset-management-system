@@ -69,8 +69,13 @@
         },
         "pipelines": {
             "useConversion3dBasic": {
-                "enabled": true,
+                "enabled": false,
                 "autoRegisterWithVAMS": true
+            },
+            "usePreview3dThumbnail": {
+                "enabled": false,
+                "autoRegisterWithVAMS": true,
+                "autoRegisterAutoTriggerOnFileUpload": true
             },
             "useConversionCadMeshMetadataExtraction": {
                 "enabled": false,
@@ -125,7 +130,7 @@
                 "autoRegisterWithVAMS": true
             },
             "useIsaacLabTraining": {
-                "enabled": true,
+                "enabled": false,
                 "acceptNvidiaEula": true,
                 "autoRegisterWithVAMS": true,
                 "keepWarmInstance": false
@@ -166,7 +171,7 @@
         },
         "webUi": {
             "optionalBannerHtmlMessage": "",
-            "allowUnsafeEvalFeatures": false
+            "allowUnsafeEvalFeatures": true
         },
         "api": {
             "globalRateLimit": 50,
