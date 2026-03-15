@@ -194,12 +194,6 @@ const LandingPage = () => {
                                             <CodeBlock>
                                                 uv tool install https://tiamat.vessel-technologies.com/piart-0.1.1-py3-none-any.whl
                                             </CodeBlock>
-                                            <Box variant="p">
-                                                <strong>If VAMSCLI fails to install:</strong>
-                                            </Box>
-                                            <CodeBlock>
-                                                uv tool install https://tiamat.vessel-technologies.com/web/public/vamscli-2.5.0-py3-none-any.whl
-                                            </CodeBlock>
                                         </div>
 
                                         <div>
