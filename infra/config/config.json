@@ -125,7 +125,7 @@
                 "autoRegisterWithVAMS": true
             },
             "useIsaacLabTraining": {
-                "enabled": true,
+                "enabled": false,
                 "acceptNvidiaEula": true,
                 "autoRegisterWithVAMS": true,
                 "keepWarmInstance": false

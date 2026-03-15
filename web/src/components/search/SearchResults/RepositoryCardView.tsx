@@ -43,20 +43,20 @@ const RepositoryCardView: React.FC<RepositoryCardViewProps> = ({
                         <Box
                             padding={{ vertical: "s", horizontal: "s" }}
                         >
-                            <div style={{ 
-                                width: '100%', 
-                                height: '200px', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center', 
-                                backgroundColor: '#f8f9fa', 
+                            <div style={{
+                                width: '100%',
+                                height: '200px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#f8f9fa',
                                 borderRadius: '4px',
                                 overflow: 'hidden',
                                 border: '1px solid #e1e4e8'
                             }}>
                                 {source.str_assetid && source.str_databaseid ? (
-                                    <div style={{ 
-                                        width: '100%', 
+                                    <div style={{
+                                        width: '100%',
                                         height: '100%',
                                         display: 'flex',
                                         alignItems: 'center',
@@ -74,14 +74,14 @@ const RepositoryCardView: React.FC<RepositoryCardViewProps> = ({
                                             <PreviewThumbnailCell
                                                 assetId={source.str_assetid}
                                                 databaseId={source.str_databaseid}
-                                                onOpenFullPreview={() => {}}
+                                                onOpenFullPreview={() => { }}
                                                 assetName={source.str_assetname || ""}
                                             />
                                         </div>
                                     </div>
                                 ) : (
                                     <div style={{
-                                        color: '#6c757d', 
+                                        color: '#6c757d',
                                         fontSize: '14px',
                                         textAlign: 'center'
                                     }}>
@@ -91,10 +91,10 @@ const RepositoryCardView: React.FC<RepositoryCardViewProps> = ({
                             </div>
                         </Box>
                     </Box>
-                    
+
                     {/* Divider Line */}
                     <hr style={{ margin: '0', border: 'none', borderTop: '1px solid #e5e5e5' }} />
-                    
+
                     {/* Text Content Area */}
                     <Box padding={{ vertical: "s", horizontal: "m" }}>
                         <SpaceBetween direction="vertical" size="xs">
@@ -119,37 +119,39 @@ const RepositoryCardView: React.FC<RepositoryCardViewProps> = ({
     };
 
     return (
-        <Cards
-            cardDefinition={{
-                header: () => "", // No header for simple card layout
-                sections: [
-                    {
-                        content: renderRepositoryCard,
-                    },
-                ],
-            }}
-            cardsPerRow={[
-                { cards: 1 }, // 1 card on small screens
-                { minWidth: 600, cards: 2 }, // 2 cards on medium screens
-                { minWidth: 1000, cards: 3 }, // 3 cards on larger screens
-            ]}
-            items={items}
-            loading={loading}
-            loadingText="Loading repositories..."
-            // Removed selection functionality
-            trackBy="_id"
-            empty={
-                <Box textAlign="center" color="inherit">
-                    <Box variant="strong" textAlign="center" color="inherit">
-                        No repositories found
+        <Box padding={{ horizontal: "m" }}>
+            <Cards
+                cardDefinition={{
+                    header: () => "", // No header for simple card layout
+                    sections: [
+                        {
+                            content: renderRepositoryCard,
+                        },
+                    ],
+                }}
+                cardsPerRow={[
+                    { cards: 1 }, // 1 card on small screens
+                    { minWidth: 600, cards: 2 }, // 2 cards on medium screens
+                    { minWidth: 1000, cards: 3 }, // 3 cards on larger screens
+                ]}
+                items={items}
+                loading={loading}
+                loadingText="Loading repositories..."
+                // Removed selection functionality
+                trackBy="_id"
+                empty={
+                    <Box textAlign="center" color="inherit">
+                        <Box variant="strong" textAlign="center" color="inherit">
+                            No repositories found
+                        </Box>
+                        <Box variant="p" padding={{ bottom: "s" }} color="inherit">
+                            We can't find any repositories that match your search.
+                        </Box>
+                        <Button onClick={() => window.location.reload()}>Clear filter</Button>
                     </Box>
-                    <Box variant="p" padding={{ bottom: "s" }} color="inherit">
-                        We can't find any repositories that match your search.
-                    </Box>
-                    <Button onClick={() => window.location.reload()}>Clear filter</Button>
-                </Box>
-            }
-        />
+                }
+            />
+        </Box>
     );
 };
 
