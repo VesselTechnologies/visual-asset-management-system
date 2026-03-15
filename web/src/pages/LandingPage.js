@@ -139,11 +139,11 @@ const LandingPage = () => {
                                         <Box variant="p">
                                             Welcome to <strong>TIAMAT VAMS</strong>. This platform provides secure access to robotics simulation assets, environments, and models.
                                         </Box>
-                                        
+
                                         <Box variant="p">
                                             TIAMAT VAMS maintains a library of three fundamental types of digital assets:
                                         </Box>
-                                        
+
                                         <ul>
                                             <li><strong>Environments</strong> – digital representations of the physical world (terrain, buildings, obstacles, weather, etc.)</li>
                                             <li><strong>Robots</strong> – models of robotic platforms, including sensors, actuators, and physical constraints</li>
@@ -153,7 +153,7 @@ const LandingPage = () => {
                                         <Box variant="p">
                                             Through the TIAMAT VAMS interface you can:
                                         </Box>
-                                        
+
                                         <ul>
                                             <li>Browse, share, and preview available assets</li>
                                             <li>Share and version control models</li>
@@ -186,7 +186,7 @@ const LandingPage = () => {
                                                 Ensure <strong>Python</strong> and <strong>pip</strong> are installed, then run:
                                             </Box>
                                             <CodeBlock>
-pip install https://tiamat.vessel-technologies.com/piart.whl
+                                                pip install https://tiamat.vessel-technologies.com/piart*.whl https://tiamat.vessel-technologies.com/vamscli*.whl
                                             </CodeBlock>
                                         </div>
 
@@ -198,7 +198,7 @@ pip install https://tiamat.vessel-technologies.com/piart.whl
                                                 Login to your account:
                                             </Box>
                                             <CodeBlock>
-{`piart auth login -u {your_username}`}
+                                                {`piart auth login -u {your_username}`}
                                             </CodeBlock>
                                         </div>
                                     </SpaceBetween>
@@ -219,7 +219,7 @@ pip install https://tiamat.vessel-technologies.com/piart.whl
                                                 List all repositories you have access to:
                                             </Box>
                                             <CodeBlock>
-piart repos list
+                                                piart repos list
                                             </CodeBlock>
                                         </div>
 
@@ -231,7 +231,7 @@ piart repos list
                                                 First, identify the repository ID from the list above, then view its contents:
                                             </Box>
                                             <CodeBlock>
-{`piart file list -d {database} -a {repository_id}`}
+                                                {`piart file list -d {database} -a {repository_id}`}
                                             </CodeBlock>
                                             <Box variant="p">
                                                 <em>Example output: You'll see a directory structure with files like `/Locomotion/2-StoryStaircase/Loft.usd`</em>
@@ -248,13 +248,13 @@ piart repos list
                                                         <strong>Download a specific file:</strong>
                                                     </Box>
                                                     <CodeBlock>
-{`piart repos download . -d {database} -a {repository_id} --file-key "{file_path}"`}
+                                                        {`piart repos download . -d {database} -a {repository_id} --file-key "{file_path}"`}
                                                     </CodeBlock>
                                                     <Box variant="p">
                                                         <em>Example:</em>
                                                     </Box>
                                                     <CodeBlock>
-piart repos download . -d PUBLIC -a xda7e0ee0-3d87-4288-94d7-0b0017bd5f0c --file-key "/Locomotion/2-StoryStaircase/Loft.usd"
+                                                        piart repos download . -d PUBLIC -a xda7e0ee0-3d87-4288-94d7-0b0017bd5f0c --file-key "/Locomotion/2-StoryStaircase/Loft.usd"
                                                     </CodeBlock>
                                                 </div>
                                                 <div>
@@ -262,7 +262,7 @@ piart repos download . -d PUBLIC -a xda7e0ee0-3d87-4288-94d7-0b0017bd5f0c --file
                                                         <strong>Download an entire repository:</strong>
                                                     </Box>
                                                     <CodeBlock>
-{`piart repos download /local/path -d {database} -a {repository_id}`}
+                                                        {`piart repos download /local/path -d {database} -a {repository_id}`}
                                                     </CodeBlock>
                                                 </div>
                                             </SpaceBetween>
@@ -276,7 +276,7 @@ piart repos download . -d PUBLIC -a xda7e0ee0-3d87-4288-94d7-0b0017bd5f0c --file
                                                 Upload a file to a repository:
                                             </Box>
                                             <CodeBlock>
-{`piart file upload -d {database} -a {repository_id} /path/to/your/file.usd`}
+                                                {`piart file upload -d {database} -a {repository_id} /path/to/your/file.usd`}
                                             </CodeBlock>
                                         </div>
                                     </SpaceBetween>
@@ -294,7 +294,7 @@ piart repos download . -d PUBLIC -a xda7e0ee0-3d87-4288-94d7-0b0017bd5f0c --file
                                                 For detailed information about all available commands and options:
                                             </Box>
                                             <CodeBlock>
-piart --help
+                                                piart --help
                                             </CodeBlock>
                                         </div>
 
@@ -304,13 +304,13 @@ piart --help
                                             </Box>
                                             <SpaceBetween size="xs">
                                                 <CodeBlock>
-piart repos --help
+                                                    piart repos --help
                                                 </CodeBlock>
                                                 <CodeBlock>
-piart file --help
+                                                    piart file --help
                                                 </CodeBlock>
                                                 <CodeBlock>
-piart auth --help
+                                                    piart auth --help
                                                 </CodeBlock>
                                             </SpaceBetween>
                                         </div>
