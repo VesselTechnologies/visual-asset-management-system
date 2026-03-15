@@ -21,6 +21,7 @@ const ThreeJSViewerComponent: React.FC<ViewerPluginProps> = ({
     assetKey,
     multiFileKeys,
     versionId,
+    assetVersionId,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [config] = useState(Cache.getItem("config"));
@@ -159,12 +160,12 @@ const ThreeJSViewerComponent: React.FC<ViewerPluginProps> = ({
                     const highlightMaterial = baseMaterial.clone
                         ? baseMaterial.clone()
                         : new THREE.MeshStandardMaterial({
-                              color: baseMaterial.color,
-                              metalness: baseMaterial.metalness || 0.5,
-                              roughness: baseMaterial.roughness || 0.5,
-                              opacity: baseMaterial.opacity || 1.0,
-                              transparent: baseMaterial.transparent || false,
-                          });
+                            color: baseMaterial.color,
+                            metalness: baseMaterial.metalness || 0.5,
+                            roughness: baseMaterial.roughness || 0.5,
+                            opacity: baseMaterial.opacity || 1.0,
+                            transparent: baseMaterial.transparent || false,
+                        });
                     highlightMaterial.emissive = new THREE.Color(0x4caf50);
                     highlightMaterial.emissiveIntensity = 0.5;
                     obj.material = highlightMaterial;
@@ -239,8 +240,8 @@ const ThreeJSViewerComponent: React.FC<ViewerPluginProps> = ({
                     multiFileKeys && multiFileKeys.length > 0
                         ? multiFileKeys
                         : assetKey
-                        ? [assetKey]
-                        : [];
+                            ? [assetKey]
+                            : [];
                 if (filesToLoad.length === 0) throw new Error("No files specified");
 
                 const loadedGroups: any[] = [];
@@ -283,10 +284,10 @@ const ThreeJSViewerComponent: React.FC<ViewerPluginProps> = ({
                         const encodedFileKey = encodedSegments.join("/");
                         let assetUrl = `${config.api}database/${databaseId}/assets/${assetId}/download/stream/${encodedFileKey}`;
 
-                        // Add versionId query parameter for single file mode
-                        const isSingleFile = filesToLoad.length === 1;
-                        if (isSingleFile && versionId) {
-                            assetUrl += `?versionId=${encodeURIComponent(versionId)}`;
+                        // Only pass assetVersionId if provided — don't pass versionId to avoid
+                        // interfering with internal dependency resolution for multi-file assets
+                        if (assetVersionId) {
+                            assetUrl += `?assetVersionId=${encodeURIComponent(assetVersionId)}`;
                         }
 
                         const response = await fetch(assetUrl, {
@@ -311,6 +312,7 @@ const ThreeJSViewerComponent: React.FC<ViewerPluginProps> = ({
                                     databaseId,
                                     baseFileKey: fileKey,
                                     apiEndpoint: config.api,
+                                    assetVersionId: assetVersionId,
                                 },
                                 (current, total) => {
                                     setLoadingMessage(

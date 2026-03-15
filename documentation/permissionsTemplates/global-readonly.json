@@ -5,7 +5,11 @@
     "version": "1.0"
   },
   "variables": [
-    {"name": "ROLE_NAME", "required": true, "description": "The role name to create"}
+    {
+      "name": "ROLE_NAME",
+      "required": true,
+      "description": "The role name to create"
+    }
   ],
   "constraints": [
     {
@@ -14,14 +18,37 @@
       "objectType": "web",
       "criteriaAnd": [],
       "criteriaOr": [
-        {"field": "route__path", "operator": "starts_with", "value": "/assets"},
-        {"field": "route__path", "operator": "starts_with", "value": "/databases"},
-        {"field": "route__path", "operator": "starts_with", "value": "/pipelines"},
-        {"field": "route__path", "operator": "starts_with", "value": "/search"},
-        {"field": "route__path", "operator": "starts_with", "value": "/workflows"}
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/assets"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/databases"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/pipelines"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/search"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/workflows"
+        }
       ],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -30,26 +57,97 @@
       "objectType": "api",
       "criteriaAnd": [],
       "criteriaOr": [
-        {"field": "route__path", "operator": "starts_with", "value": "/secure-config"},
-        {"field": "route__path", "operator": "starts_with", "value": "/amplify-config"},
-        {"field": "route__path", "operator": "starts_with", "value": "/auth/routes"},
-        {"field": "route__path", "operator": "starts_with", "value": "/asset-links"},
-        {"field": "route__path", "operator": "starts_with", "value": "/assets"},
-        {"field": "route__path", "operator": "starts_with", "value": "/comments"},
-        {"field": "route__path", "operator": "starts_with", "value": "/database"},
-        {"field": "route__path", "operator": "starts_with", "value": "/metadata"},
-        {"field": "route__path", "operator": "starts_with", "value": "/metadataschema"},
-        {"field": "route__path", "operator": "starts_with", "value": "/pipelines"},
-        {"field": "route__path", "operator": "starts_with", "value": "/search"},
-        {"field": "route__path", "operator": "starts_with", "value": "/subscriptions"},
-        {"field": "route__path", "operator": "starts_with", "value": "/check-subscription"},
-        {"field": "route__path", "operator": "starts_with", "value": "/tags"},
-        {"field": "route__path", "operator": "starts_with", "value": "/tag-types"},
-        {"field": "route__path", "operator": "starts_with", "value": "/workflows"},
-        {"field": "route__path", "operator": "starts_with", "value": "/buckets"}
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/secure-config"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/amplify-config"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/auth/routes"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/asset-links"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/assets"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/comments"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/database"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/metadata"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/metadataschema"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/pipelines"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/search"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/subscriptions"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/check-subscription"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/tags"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/tag-types"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/workflows"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/buckets"
+        }
       ],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -58,12 +156,27 @@
       "objectType": "api",
       "criteriaAnd": [],
       "criteriaOr": [
-        {"field": "route__path", "operator": "starts_with", "value": "/auth/routes"},
-        {"field": "route__path", "operator": "starts_with", "value": "/search"},
-        {"field": "route__path", "operator": "starts_with", "value": "/check-subscription"}
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/auth/routes"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/search"
+        },
+        {
+          "field": "route__path",
+          "operator": "starts_with",
+          "value": "/check-subscription"
+        }
       ],
       "groupPermissions": [
-        {"action": "POST", "type": "allow"}
+        {
+          "action": "POST",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -71,11 +184,18 @@
       "description": "Allow read access to all databases",
       "objectType": "database",
       "criteriaAnd": [
-        {"field": "databaseId", "operator": "contains", "value": ".*"}
+        {
+          "field": "databaseId",
+          "operator": "contains",
+          "value": ".*"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -83,11 +203,18 @@
       "description": "Allow read access to all assets",
       "objectType": "asset",
       "criteriaAnd": [
-        {"field": "databaseId", "operator": "contains", "value": ".*"}
+        {
+          "field": "databaseId",
+          "operator": "contains",
+          "value": ".*"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -95,11 +222,18 @@
       "description": "Allow read access to all pipelines",
       "objectType": "pipeline",
       "criteriaAnd": [
-        {"field": "databaseId", "operator": "contains", "value": ".*"}
+        {
+          "field": "databaseId",
+          "operator": "contains",
+          "value": ".*"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -107,11 +241,18 @@
       "description": "Allow read access to all workflows",
       "objectType": "workflow",
       "criteriaAnd": [
-        {"field": "databaseId", "operator": "contains", "value": ".*"}
+        {
+          "field": "databaseId",
+          "operator": "contains",
+          "value": ".*"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -119,11 +260,18 @@
       "description": "Allow read access to all metadata schemas",
       "objectType": "metadataSchema",
       "criteriaAnd": [
-        {"field": "databaseId", "operator": "contains", "value": ".*"}
+        {
+          "field": "databaseId",
+          "operator": "contains",
+          "value": ".*"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -131,11 +279,18 @@
       "description": "Allow read access to all tags",
       "objectType": "tag",
       "criteriaAnd": [
-        {"field": "tagName", "operator": "contains", "value": ".*"}
+        {
+          "field": "tagName",
+          "operator": "contains",
+          "value": ".*"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     },
     {
@@ -143,11 +298,18 @@
       "description": "Allow read access to all tag types",
       "objectType": "tagType",
       "criteriaAnd": [
-        {"field": "tagTypeName", "operator": "contains", "value": ".*"}
+        {
+          "field": "tagTypeName",
+          "operator": "contains",
+          "value": ".*"
+        }
       ],
       "criteriaOr": [],
       "groupPermissions": [
-        {"action": "GET", "type": "allow"}
+        {
+          "action": "GET",
+          "type": "allow"
+        }
       ]
     }
   ]
