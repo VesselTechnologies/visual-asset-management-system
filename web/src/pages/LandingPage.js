@@ -189,13 +189,7 @@ const LandingPage = () => {
                                                 Then install the PI-ART CLI:
                                             </Box>
                                             <Box variant="p">
-                                                <strong>Global installation (recommended):</strong>
-                                            </Box>
-                                            <CodeBlock>
-                                                uvx tool install https://tiamat.vessel-technologies.com/piart-0.1.0-py3-none-any.whl
-                                            </CodeBlock>
-                                            <Box variant="p">
-                                                <strong>Virtual environment installation:</strong>
+                                                <strong>UV installation (recommended):</strong>
                                             </Box>
                                             <CodeBlock>
                                                 uv tool install https://tiamat.vessel-technologies.com/piart-0.1.0-py3-none-any.whl

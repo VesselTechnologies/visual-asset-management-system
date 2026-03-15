@@ -53,9 +53,9 @@ def install_bundled_vamscli():
         print("Installing vamscli dependency...")
         print(f"Installing: {wheel_file.name}")
         
-        # Install the wheel using pip
+        # Install the wheel using uv
         result = subprocess.run([
-            sys.executable, "-m", "pip", "install", str(wheel_file)
+            "uv", "tool", "install", str(wheel_file)
         ], capture_output=True, text=True)
         
         if result.returncode == 0:
