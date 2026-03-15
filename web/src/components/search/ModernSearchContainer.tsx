@@ -484,17 +484,32 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     // Render fallback for NoOpenSearch mode using our card view
     if (useNoOpenSearch) {
         return (
-            <Box>
-                <RepositoryCardView
-                    items={noSearchItems}
-                    loading={noSearchLoading}
-                    currentPageIndex={1}
-                    pagesCount={Math.ceil(noSearchItems.length / preferences.pageSize)}
-                    onPageChange={() => {}}
-                    onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
-                    totalItems={noSearchItems.length}
-                />
-            </Box>
+            <div>
+                <Box padding={{ bottom: "l" }}>
+                    <ListPage
+                        singularName={Synonyms.Asset}
+                        singularNameTitleCase={Synonyms.Asset}
+                        pluralName={Synonyms.assets}
+                        pluralNameTitleCase={Synonyms.Assets}
+                        onCreateCallback={handleCreateAsset}
+                        listDefinition={AssetListDefinition}
+                        fetchAllElements={fetchAllAssets}
+                        fetchElements={fetchDatabaseAssets}
+                        hideDeleteButton={true}
+                    />
+                </Box>
+                <Box padding={{ top: "l" }}>
+                    <RepositoryCardView
+                        items={noSearchItems}
+                        loading={noSearchLoading}
+                        currentPageIndex={1}
+                        pagesCount={Math.ceil(noSearchItems.length / preferences.pageSize)}
+                        onPageChange={() => {}}
+                        onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
+                        totalItems={noSearchItems.length}
+                    />
+                </Box>
+            </div>
         );
     }
 
@@ -530,6 +545,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
         switch (currentView) {
             case "card":
                 if (recordType === "asset") {
+                    console.log("Rendering card view for assets with preferences:", preferences);
                     // Use new simplified repository card view for assets/repositories
                     return (
                         <RepositoryCardView

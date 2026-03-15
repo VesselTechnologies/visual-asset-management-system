@@ -149,29 +149,6 @@ const RepositoryCardView: React.FC<RepositoryCardViewProps> = ({
                     <Button onClick={() => window.location.reload()}>Clear filter</Button>
                 </Box>
             }
-            header={
-                <Header
-                    counter={totalItems ? `(${totalItems})` : ""}
-                    actions={
-                        <SpaceBetween direction="horizontal" size="xs">
-                            {onCreateAsset && (
-                                <Button onClick={onCreateAsset} variant="primary">
-                                    Create {Synonyms.Asset}
-                                </Button>
-                            )}
-                        </SpaceBetween>
-                    }
-                >
-                    {Synonyms.Assets}
-                </Header>
-            }
-            pagination={
-                <Pagination
-                    currentPageIndex={currentPageIndex}
-                    pagesCount={pagesCount}
-                    onChange={({ detail }) => onPageChange(detail.currentPageIndex)}
-                />
-            }
         />
     );
 };
