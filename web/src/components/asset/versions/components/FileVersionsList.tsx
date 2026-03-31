@@ -25,6 +25,7 @@ import {
 import { useNavigate, useParams } from "react-router";
 import { AssetVersionContext, FileVersion, AssetVersionMetadataItem } from "../AssetVersionManager";
 import { downloadAsset } from "../../../../services/APIService";
+import Synonyms from "../../../../synonyms";
 
 export const FileVersionsList: React.FC = () => {
     const { databaseId, assetId } = useParams<{ databaseId: string; assetId: string }>();
@@ -170,7 +171,7 @@ export const FileVersionsList: React.FC = () => {
             cell: (item: AssetVersionMetadataItem) => (
                 <Box>
                     {item.filePath === "/" ? (
-                        <Badge color="green">Asset</Badge>
+                        <Badge color="green">{Synonyms.Asset}</Badge>
                     ) : (
                         <div style={{ fontFamily: "monospace", fontSize: "0.9em" }}>
                             {item.filePath}
@@ -200,7 +201,9 @@ export const FileVersionsList: React.FC = () => {
             id: "valueType",
             header: "Value Type",
             cell: (item: AssetVersionMetadataItem) => (
-                <div style={{ fontSize: "0.9em", color: "#5f6b7a" }}>{item.metadataValueType}</div>
+                <div style={{ fontSize: "0.9em", color: "var(--vams-text-secondary)" }}>
+                    {item.metadataValueType}
+                </div>
             ),
             sortingField: "metadataValueType",
         },
@@ -579,7 +582,7 @@ export const FileVersionsList: React.FC = () => {
                 header={<Header variant="h3">Version v{selectedVersion?.Version} Details</Header>}
             >
                 <Box textAlign="center" padding="l">
-                    <div>No files or metadata associated with this asset version</div>
+                    <div>{`No files or metadata associated with this ${Synonyms.asset} version`}</div>
                 </Box>
             </Container>
         );
@@ -597,7 +600,7 @@ export const FileVersionsList: React.FC = () => {
             loadingText="Loading file versions"
             empty={
                 <Box textAlign="center" padding="l">
-                    <div>No files associated with this asset version</div>
+                    <div>{`No files associated with this ${Synonyms.asset} version`}</div>
                 </Box>
             }
             header={
@@ -789,7 +792,7 @@ export const FileVersionsList: React.FC = () => {
                         label="Filter by location"
                         options={[
                             { text: "All", id: "all" },
-                            { text: "Asset-level", id: "asset" },
+                            { text: `${Synonyms.Asset}-level`, id: "asset" },
                             { text: "File-level", id: "files" },
                         ]}
                     />
@@ -813,7 +816,12 @@ export const FileVersionsList: React.FC = () => {
                                     {selectedVersionDetails?.versionedMetadata &&
                                         filteredMetadata.length !==
                                             selectedVersionDetails.versionedMetadata.length && (
-                                            <span style={{ marginLeft: "8px", color: "#5f6b7a" }}>
+                                            <span
+                                                style={{
+                                                    marginLeft: "8px",
+                                                    color: "var(--vams-text-secondary)",
+                                                }}
+                                            >
                                                 (filtered from{" "}
                                                 {selectedVersionDetails.versionedMetadata.length})
                                             </span>

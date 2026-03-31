@@ -45,8 +45,10 @@ def load(file_path: str) -> pv.PolyData:
 
     # If trimesh returns a Scene (multi-object), merge all meshes
     if isinstance(scene_or_mesh, trimesh.Scene):
+        # Use scene.dump() to get transformed meshes (applies scene graph
+        # transforms so sub-meshes are positioned correctly relative to each other).
         trimeshes = []
-        for name, geom in scene_or_mesh.geometry.items():
+        for geom in scene_or_mesh.dump():
             if isinstance(geom, trimesh.Trimesh):
                 trimeshes.append(geom)
             elif isinstance(geom, trimesh.PointCloud):
@@ -54,14 +56,25 @@ def load(file_path: str) -> pv.PolyData:
         if not trimeshes:
             raise ValueError("No valid mesh geometry found in scene")
 
-        logger.info(f"Loaded scene with {len(trimeshes)} geometries")
+        logger.info(f"Loaded scene with {len(trimeshes)} geometries (transforms applied)")
 
         # Single geometry: preserve full UV texture for proper PBR rendering
         if len(trimeshes) == 1:
             return _trimesh_to_pyvista_textured(trimeshes[0])
 
-        # Multiple geometries: bake textures to vertex colors then merge
-        baked = [_bake_texture_to_vertex_colors(m) for m in trimeshes]
+        # Multiple geometries: bake textures to vertex colors then merge.
+        # We must bake because PyVista can only apply one texture per mesh,
+        # and multi-geometry scenes may have different textures per part.
+        baked = []
+        for m in trimeshes:
+            b = _bake_texture_to_vertex_colors(m)
+            # If baking failed and the mesh still has texture visual, force to vertex colors
+            if hasattr(b, 'visual') and hasattr(b.visual, 'kind') and b.visual.kind == 'texture':
+                try:
+                    b.visual = b.visual.to_color()
+                except Exception:
+                    pass
+            baked.append(b)
         merged = trimesh.util.concatenate(baked)
         return _trimesh_to_pyvista(merged)
 
@@ -93,7 +106,24 @@ def _trimesh_to_pyvista_textured(mesh: trimesh.Trimesh) -> pv.PolyData:
             mesh.visual.uv is not None):
         try:
             mat = mesh.visual.material
-            tex_image = getattr(mat, 'baseColorTexture', None) or getattr(mat, 'image', None)
+            # Try multiple ways to get the texture image from the material
+            # Different trimesh versions and material types store it differently
+            tex_image = None
+            for attr_name in ['baseColorTexture', 'image', 'diffuseTexture']:
+                tex_image = getattr(mat, attr_name, None)
+                if tex_image is not None:
+                    break
+
+            # For PBR materials, try the baseColorTexture from the PBR properties
+            if tex_image is None and hasattr(mat, 'pbrMetallicRoughness'):
+                pbr = mat.pbrMetallicRoughness
+                tex_image = getattr(pbr, 'baseColorTexture', None)
+
+            # Try to get from material's main_color or diffuse property as PIL Image
+            if tex_image is None and hasattr(mat, 'main_color'):
+                # Some materials store a flat color, not a texture — skip these
+                pass
+
             if tex_image is not None:
                 # Set UV coordinates on mesh
                 pv_mesh.active_texture_coordinates = np.array(mesh.visual.uv)
@@ -102,6 +132,8 @@ def _trimesh_to_pyvista_textured(mesh: trimesh.Trimesh) -> pv.PolyData:
                 logger.info(f"Loaded textured mesh: {len(vertices)} vertices, {n_faces} faces, "
                             f"texture={tex_image.size}")
                 return pv_mesh
+            else:
+                logger.info("No texture image found on material, falling back to vertex color baking")
         except Exception as e:
             logger.warning(f"Failed to extract UV texture, falling back to vertex colors: {e}")
 
@@ -109,11 +141,29 @@ def _trimesh_to_pyvista_textured(mesh: trimesh.Trimesh) -> pv.PolyData:
     mesh = _bake_texture_to_vertex_colors(mesh)
     if mesh.visual and hasattr(mesh.visual, 'vertex_colors') and mesh.visual.vertex_colors is not None:
         colors = np.array(mesh.visual.vertex_colors)
-        if colors.ndim == 2 and colors.shape[1] >= 3 and colors.shape[0] == len(vertices):
+
+        # Handle single-color broadcast: to_color() may return (4,) or (3,) for flat-colored PBR materials
+        if colors.ndim == 1 and len(colors) >= 3:
+            # Broadcast single color to all vertices
+            single_color = colors[:3].reshape(1, 3)
+            pv_mesh.point_data["RGB"] = np.tile(single_color, (len(vertices), 1))
+            logger.info(f"Broadcast single material color {colors[:3].tolist()} to all {len(vertices)} vertices")
+        elif colors.ndim == 2 and colors.shape[1] >= 3 and colors.shape[0] == len(vertices):
             pv_mesh.point_data["RGB"] = colors[:, :3]
+        elif colors.ndim == 2 and colors.shape[1] >= 3 and colors.shape[0] == 1:
+            # Single row — broadcast
+            pv_mesh.point_data["RGB"] = np.tile(colors[0, :3].reshape(1, 3), (len(vertices), 1))
+            logger.info(f"Broadcast single material color to all {len(vertices)} vertices")
         elif colors.ndim == 2 and colors.shape[1] >= 3:
             logger.warning(f"Vertex color count ({colors.shape[0]}) does not match "
                            f"vertex count ({len(vertices)}), skipping vertex colors")
+    else:
+        # Last resort: check if the material has a baseColorFactor we can use directly
+        bcf_color = _extract_material_color(mesh)
+        if bcf_color is not None:
+            single_color = bcf_color[:3].reshape(1, 3)
+            pv_mesh.point_data["RGB"] = np.tile(single_color, (len(vertices), 1))
+            logger.info(f"Applied material baseColorFactor {bcf_color[:3].tolist()} to all vertices")
 
     logger.info(f"Loaded mesh: {len(vertices)} vertices, {n_faces} faces")
     return pv_mesh
@@ -121,18 +171,106 @@ def _trimesh_to_pyvista_textured(mesh: trimesh.Trimesh) -> pv.PolyData:
 
 def _bake_texture_to_vertex_colors(mesh: trimesh.Trimesh) -> trimesh.Trimesh:
     """
-    If the mesh has UV-mapped textures (common in GLB/GLTF), bake the texture
-    to per-vertex colors so they survive the PyVista conversion.
+    If the mesh has UV-mapped textures or PBR material colors, convert to
+    per-vertex ColorVisuals so colors survive PyVista conversion and merging.
+
+    Handles several failure modes:
+    - to_color() returns a single flat color instead of per-vertex colors
+    - to_color() returns degenerate colors (all white/black) when a texture
+      failed to sample, but a baseColorFactor exists on the material
+    - to_color() throws an exception entirely
     """
     try:
         if (hasattr(mesh, 'visual') and
                 hasattr(mesh.visual, 'kind') and
                 mesh.visual.kind == 'texture'):
-            logger.info("Baking UV texture to vertex colors for PyVista rendering")
-            mesh.visual = mesh.visual.to_color()
+            logger.info("Baking texture/material to vertex colors for PyVista rendering")
+            color_visual = mesh.visual.to_color()
+            vc = np.array(color_visual.vertex_colors)
+
+            # to_color() may return a single color (4,) for flat PBR materials.
+            # In that case, manually create proper per-vertex colors.
+            if vc.ndim == 1 and len(vc) >= 3:
+                n_verts = len(mesh.vertices)
+                full_colors = np.tile(vc[:4].reshape(1, -1), (n_verts, 1)).astype(np.uint8)
+                mesh.visual = trimesh.visual.ColorVisuals(
+                    mesh=mesh,
+                    vertex_colors=full_colors,
+                )
+                logger.info(f"  Broadcast flat PBR color {vc[:3].tolist()} to {n_verts} vertices")
+            else:
+                # Check if to_color() returned degenerate all-same colors
+                # (e.g. all white [255,255,255] or all black [0,0,0]) which
+                # indicates the texture sampling failed silently.
+                if vc.ndim == 2 and vc.shape[0] > 0:
+                    rgb_mean = vc[:, :3].mean(axis=0)
+                    rgb_std = vc[:, :3].std()
+                    is_all_white = np.all(rgb_mean > 250) and rgb_std < 2.0
+                    is_all_black = np.all(rgb_mean < 5) and rgb_std < 2.0
+                    if is_all_white or is_all_black:
+                        # Degenerate: try baseColorFactor from the material instead
+                        color_name = "white" if is_all_white else "black"
+                        logger.warning(f"  to_color() returned all-{color_name}, "
+                                       f"attempting baseColorFactor extraction")
+                        bcf_color = _extract_material_color(mesh)
+                        if bcf_color is not None:
+                            n_verts = len(mesh.vertices)
+                            full_colors = np.tile(bcf_color.reshape(1, -1), (n_verts, 1))
+                            mesh.visual = trimesh.visual.ColorVisuals(
+                                mesh=mesh,
+                                vertex_colors=full_colors,
+                            )
+                            logger.info(f"  Replaced degenerate colors with material color "
+                                        f"{bcf_color[:3].tolist()}")
+                            return mesh
+                mesh.visual = color_visual
     except Exception as e:
         logger.warning(f"Failed to bake texture to vertex colors: {e}")
+
+        # Fallback: try to extract baseColorFactor directly from PBR material
+        bcf_color = _extract_material_color(mesh)
+        if bcf_color is not None:
+            n_verts = len(mesh.vertices)
+            full_colors = np.tile(bcf_color.reshape(1, -1), (n_verts, 1))
+            mesh.visual = trimesh.visual.ColorVisuals(
+                mesh=mesh,
+                vertex_colors=full_colors,
+            )
+            logger.info(f"  Applied baseColorFactor {bcf_color[:3].tolist()} as fallback")
+
     return mesh
+
+
+def _extract_material_color(mesh: trimesh.Trimesh):
+    """
+    Try to extract a usable RGBA color from the mesh material's
+    baseColorFactor or main_color. Returns a (4,) uint8 array or None.
+    """
+    try:
+        if not (hasattr(mesh, 'visual') and hasattr(mesh.visual, 'material')):
+            return None
+        mat = mesh.visual.material
+        bcf = getattr(mat, 'baseColorFactor', None)
+        if bcf is None:
+            bcf = getattr(mat, 'main_color', None)
+        if bcf is None:
+            return None
+        bcf_arr = np.array(bcf)
+        # baseColorFactor may be float [0-1] or uint8 [0-255]
+        if bcf_arr.dtype.kind == 'f' and bcf_arr.max() <= 1.0:
+            bcf_arr = (bcf_arr * 255).astype(np.uint8)
+        else:
+            bcf_arr = bcf_arr.astype(np.uint8)
+        if len(bcf_arr) < 3:
+            return None
+        rgba = np.zeros(4, dtype=np.uint8)
+        rgba[:min(len(bcf_arr), 4)] = bcf_arr[:4]
+        if len(bcf_arr) < 4:
+            rgba[3] = 255
+        return rgba
+    except Exception as e:
+        logger.warning(f"Failed to extract material color: {e}")
+        return None
 
 
 def _trimesh_to_pyvista(mesh: trimesh.Trimesh) -> pv.PolyData:
@@ -151,9 +289,13 @@ def _trimesh_to_pyvista(mesh: trimesh.Trimesh) -> pv.PolyData:
     # Transfer vertex colors if available
     if mesh.visual and hasattr(mesh.visual, 'vertex_colors') and mesh.visual.vertex_colors is not None:
         colors = np.array(mesh.visual.vertex_colors)
-        if colors.ndim == 2 and colors.shape[1] >= 3 and colors.shape[0] == len(vertices):
-            # Use RGB only (drop alpha)
+        # Handle single-color broadcast from PBR material flat colors
+        if colors.ndim == 1 and len(colors) >= 3:
+            pv_mesh.point_data["RGB"] = np.tile(colors[:3].reshape(1, 3), (len(vertices), 1))
+        elif colors.ndim == 2 and colors.shape[1] >= 3 and colors.shape[0] == len(vertices):
             pv_mesh.point_data["RGB"] = colors[:, :3]
+        elif colors.ndim == 2 and colors.shape[1] >= 3 and colors.shape[0] == 1:
+            pv_mesh.point_data["RGB"] = np.tile(colors[0, :3].reshape(1, 3), (len(vertices), 1))
         elif colors.ndim == 2 and colors.shape[1] >= 3:
             logger.warning(f"Vertex color count ({colors.shape[0]}) does not match "
                            f"vertex count ({len(vertices)}), skipping vertex colors")

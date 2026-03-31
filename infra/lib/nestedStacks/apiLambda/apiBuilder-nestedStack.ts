@@ -1258,6 +1258,37 @@ export class ApiBuilderNestedStack extends NestedStack {
             api: api,
         });
 
+        // API Key Management Routes
+        attachFunctionToApi(this, authFunctions.apiKeyService, {
+            routePath: "/auth/api-keys",
+            method: apigateway.HttpMethod.GET,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.apiKeyService, {
+            routePath: "/auth/api-keys",
+            method: apigateway.HttpMethod.POST,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.apiKeyService, {
+            routePath: "/auth/api-keys/{apiKeyId}",
+            method: apigateway.HttpMethod.GET,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.apiKeyService, {
+            routePath: "/auth/api-keys/{apiKeyId}",
+            method: apigateway.HttpMethod.PUT,
+            api: api,
+        });
+
+        attachFunctionToApi(this, authFunctions.apiKeyService, {
+            routePath: "/auth/api-keys/{apiKeyId}",
+            method: apigateway.HttpMethod.DELETE,
+            api: api,
+        });
+
         // Metadata Schema Defaults - Auto-load default schemas if configured
         if (
             config.app.metadataSchema.autoLoadDefaultAssetLinksSchema ||
@@ -1367,6 +1398,17 @@ export class ApiBuilderNestedStack extends NestedStack {
                 {
                     id: "AwsSolutions-IAM5",
                     reason: "Not providing IAM wildcard permissions to constraint tables.",
+                },
+            ],
+            true
+        );
+
+        NagSuppressions.addResourceSuppressions(
+            this,
+            [
+                {
+                    id: "AwsSolutions-IAM5",
+                    reason: "Wildcard scoped to deployment-named SQS queues and EventBridge buses via config.name. External (non-VAMS) resources require user-configured resource-based policies. Pipeline resources are created at runtime, so ARNs cannot be known at deploy time.",
                 },
             ],
             true

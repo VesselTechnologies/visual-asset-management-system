@@ -20,16 +20,19 @@ logger = get_logger()
 # Default rendering parameters
 DEFAULT_N_FRAMES = 36
 DEFAULT_RESOLUTION = (800, 600)
-DEFAULT_BG_COLOR = "white"
 POINT_SIZE = 2.0
+
+# Background color for rendering. Mid-gray minimizes visible halos on
+# anti-aliased edges when composited over both light and dark backgrounds,
+# since the blended edge pixels are close to neutral.
+_BG_COLOR = (128, 128, 128)
 
 # Percentile range for camera focus region (crops outliers)
 _FOCUS_PERCENTILE_LO = 2
 _FOCUS_PERCENTILE_HI = 98
 
 # Camera elevation angle in degrees above the orbit plane.
-# 25° is the industry standard for 3D product thumbnails — provides a "hero shot"
-# 3/4 view that reveals top surfaces without being too steep.
+# 25 degrees is the industry standard for 3D product thumbnails.
 _CAMERA_ELEVATION_DEG = 25
 
 
@@ -37,24 +40,17 @@ def generate_rotating_frames(
     pv_data: pv.PolyData,
     n_frames: int = DEFAULT_N_FRAMES,
     resolution: tuple = DEFAULT_RESOLUTION,
+    use_full_bounds: bool = False,
 ) -> list:
     """
     Render a rotating sequence of frames around the Y-axis of the given PyVista data.
-
-    Args:
-        pv_data: PyVista PolyData (mesh or point cloud)
-        n_frames: number of frames for the rotation (default 36 = 10 degrees per step)
-        resolution: tuple of (width, height) for rendering
-
-    Returns:
-        List of numpy arrays (H, W, 3) uint8, one per frame
+    Returns RGBA frames with transparent background.
     """
     logger.info(f"Generating {n_frames} rotating frames at {resolution}")
 
     plotter = pv.Plotter(off_screen=True, window_size=resolution)
-    plotter.set_background(DEFAULT_BG_COLOR)
+    plotter.set_background(_BG_COLOR)
 
-    # Determine render mode based on data type
     is_point_cloud = pv_data.n_cells == 0 or pv_data.n_cells == pv_data.n_points
 
     if is_point_cloud:
@@ -62,8 +58,17 @@ def generate_rotating_frames(
     else:
         _add_mesh(plotter, pv_data)
 
-    # Compute camera framing from percentile-based focus region
-    focal_point, radius, elevation = _compute_camera_framing(pv_data)
+    focal_point, radius, elevation = _compute_camera_framing(
+        pv_data, use_full_bounds=use_full_bounds, resolution=resolution
+    )
+
+    # Compute stable clipping range from the full model extent so VTK
+    # does not auto-adjust per frame (which causes near-plane clipping
+    # and depth-buffer flicker for wide models at certain orbit angles).
+    full_diagonal = np.linalg.norm(pv_data.points.max(axis=0) - pv_data.points.min(axis=0))
+    cam_distance = np.sqrt(radius**2 + elevation**2)
+    near_clip = max((cam_distance - full_diagonal) * 0.5, cam_distance * 0.001)
+    far_clip = cam_distance + full_diagonal * 2.0
 
     frames = []
     for i in range(n_frames):
@@ -76,9 +81,11 @@ def generate_rotating_frames(
         plotter.camera.position = (cam_x, cam_y, cam_z)
         plotter.camera.focal_point = tuple(focal_point)
         plotter.camera.up = (0.0, 1.0, 0.0)
+        plotter.camera.clipping_range = (near_clip, far_clip)
 
         plotter.render()
         img = plotter.screenshot(return_img=True)
+        img = _add_alpha_from_depth(plotter, img)
         frames.append(img)
 
     plotter.close()
@@ -89,21 +96,16 @@ def generate_rotating_frames(
 def generate_static_frame(
     pv_data: pv.PolyData,
     resolution: tuple = DEFAULT_RESOLUTION,
+    use_full_bounds: bool = False,
 ) -> np.ndarray:
     """
     Render a single static frame of the given PyVista data.
-
-    Args:
-        pv_data: PyVista PolyData (mesh or point cloud)
-        resolution: tuple of (width, height) for rendering
-
-    Returns:
-        numpy array (H, W, 3) uint8
+    Returns RGBA image with transparent background.
     """
     logger.info(f"Generating static frame at {resolution}")
 
     plotter = pv.Plotter(off_screen=True, window_size=resolution)
-    plotter.set_background(DEFAULT_BG_COLOR)
+    plotter.set_background(_BG_COLOR)
 
     is_point_cloud = pv_data.n_cells == 0 or pv_data.n_cells == pv_data.n_points
 
@@ -112,10 +114,15 @@ def generate_static_frame(
     else:
         _add_mesh(plotter, pv_data)
 
-    # Use percentile-based framing for consistent results with sparse scenes
-    focal_point, radius, elevation = _compute_camera_framing(pv_data)
+    focal_point, radius, elevation = _compute_camera_framing(
+        pv_data, use_full_bounds=use_full_bounds, resolution=resolution
+    )
 
-    # Isometric-like view at 45 degree azimuth, 20 degree elevation
+    full_diagonal = np.linalg.norm(pv_data.points.max(axis=0) - pv_data.points.min(axis=0))
+    cam_distance = np.sqrt(radius**2 + elevation**2)
+    near_clip = max((cam_distance - full_diagonal) * 0.5, cam_distance * 0.001)
+    far_clip = cam_distance + full_diagonal * 2.0
+
     angle_rad = np.radians(45)
     cam_x = focal_point[0] + radius * np.cos(angle_rad)
     cam_z = focal_point[2] + radius * np.sin(angle_rad)
@@ -124,9 +131,11 @@ def generate_static_frame(
     plotter.camera.position = (cam_x, cam_y, cam_z)
     plotter.camera.focal_point = tuple(focal_point)
     plotter.camera.up = (0.0, 1.0, 0.0)
+    plotter.camera.clipping_range = (near_clip, far_clip)
 
     plotter.render()
     img = plotter.screenshot(return_img=True)
+    img = _add_alpha_from_depth(plotter, img)
     plotter.close()
 
     return img
@@ -138,8 +147,6 @@ def _add_mesh(plotter: pv.Plotter, pv_data: pv.PolyData):
     has_colors = "RGB" in pv_data.point_data
 
     if texture is not None:
-        # UV-mapped texture rendering (GLB/GLTF models)
-        # Note: PBR is not used because it renders incorrectly in headless/Xvfb mode
         logger.info("Rendering with UV texture mapping")
         plotter.add_mesh(
             pv_data,
@@ -167,7 +174,6 @@ def _add_mesh(plotter: pv.Plotter, pv_data: pv.PolyData):
             specular_power=15,
         )
 
-    # Add subtle lighting
     plotter.add_light(pv.Light(position=(1, 1, 1), intensity=0.8))
 
 
@@ -184,7 +190,6 @@ def _add_point_cloud(plotter: pv.Plotter, pv_data: pv.PolyData):
             render_points_as_spheres=True,
         )
     else:
-        # Color by elevation (Y-axis, which is up after normalization)
         plotter.add_mesh(
             pv_data,
             scalars=pv_data.points[:, 1],
@@ -195,49 +200,98 @@ def _add_point_cloud(plotter: pv.Plotter, pv_data: pv.PolyData):
         )
 
 
-def _compute_camera_framing(pv_data):
+def _add_alpha_from_depth(plotter, img_rgb):
     """
-    Compute camera framing parameters based on the percentile-based focus region.
+    Create RGBA image using the Z-buffer (depth buffer) to determine transparency.
 
-    Uses the 2nd–98th percentile bounds instead of the full bounding box so that
-    sparse scenes (e.g. single-position scans with distant outliers) are framed
-    tightly around the dense content.
+    The depth buffer contains the distance from the camera to each pixel.
+    Background pixels have depth = 1.0 (far plane). Any pixel with geometry
+    has depth < 1.0. This gives a perfect binary mask regardless of model
+    color, texture, or sparsity — no color matching needed.
 
-    Returns:
-        (focal_point, radius, elevation) where:
-          - focal_point: np.array [x, y, z] center of the focus region
-          - radius: orbit distance from focal_point in the XZ plane
-          - elevation: camera Y offset above focal_point
+    This works for all model types: solid meshes, sparse point clouds,
+    textured models, white surfaces, and models with holes.
+    """
+    # Get the depth buffer from VTK's renderer
+    z_buffer = plotter.get_image_depth()
+
+    h, w = img_rgb.shape[:2]
+    rgba = np.zeros((h, w, 4), dtype=np.uint8)
+    rgba[:, :, :3] = img_rgb[:, :, :3]
+
+    # Background pixels have depth == 1.0 (far clipping plane)
+    # Model pixels have depth < 1.0
+    has_geometry = z_buffer < 0.9999
+
+    # Erode the geometry mask by 1 pixel to remove anti-aliased edge fringe
+    # that picks up background color blending
+    from scipy.ndimage import binary_erosion
+    has_geometry = binary_erosion(has_geometry, iterations=1)
+
+    rgba[:, :, 3] = np.where(has_geometry, 255, 0).astype(np.uint8)
+
+    return rgba
+
+
+def _compute_camera_framing(pv_data, use_full_bounds=False, resolution=DEFAULT_RESOLUTION):
+    """
+    Compute camera framing parameters for orbit-style camera positioning.
+
+    Uses per-axis FOV calculation that accounts for viewport aspect ratio
+    and the maximum visible horizontal extent during a full orbit (the XZ
+    diagonal, since the model is viewed from all angles).
+
+    For percentile mode (default): uses 2nd-98th percentile bounds to
+    crop outliers from sparse scenes (point clouds with distant noise).
+
+    For full-bounds mode (USD/CAD): uses complete bounding box since
+    all geometry in engineered models is intentional.
     """
     points = pv_data.points
 
-    # Compute percentile-based bounds on each axis
-    lo = np.percentile(points, _FOCUS_PERCENTILE_LO, axis=0)
-    hi = np.percentile(points, _FOCUS_PERCENTILE_HI, axis=0)
+    if use_full_bounds:
+        lo = points.min(axis=0)
+        hi = points.max(axis=0)
+    else:
+        lo = np.percentile(points, _FOCUS_PERCENTILE_LO, axis=0)
+        hi = np.percentile(points, _FOCUS_PERCENTILE_HI, axis=0)
 
-    # Focus region center
     focal_point = (lo + hi) / 2.0
 
-    # Focus region extents
     dx = hi[0] - lo[0]
     dy = hi[1] - lo[1]
     dz = hi[2] - lo[2]
 
-    # Diagonal of the focus region bounding box
-    diagonal = np.sqrt(dx**2 + dy**2 + dz**2)
+    # FOV-based framing: compute required distance for each axis.
+    # Default VTK camera has ~30 degree vertical FOV.
+    half_fov_rad = np.radians(15.0)
+    tan_half_fov = np.tan(half_fov_rad)
 
-    # Orbit radius: enough distance to see the focus region comfortably
-    # Factor of 1.8 gives a good field-of-view coverage
-    radius = max(diagonal * 1.8, 1e-6)
+    # Horizontal FOV is wider due to viewport aspect ratio
+    aspect_ratio = resolution[0] / resolution[1]  # e.g. 800/600 = 1.333
+    tan_half_fov_h = tan_half_fov * aspect_ratio
 
-    # Elevation: fixed angle above the orbit plane for a consistent "hero shot"
-    # 3/4 view. Using a fixed angle (rather than a fraction of vertical extent)
-    # ensures the camera angle is consistent regardless of object proportions.
+    # During a full orbit, the camera sees the model from all angles.
+    # The worst-case horizontal extent is the XZ diagonal (corner-on view).
+    xz_diagonal = np.sqrt(dx**2 + dz**2)
+
+    # Distance needed to fit vertical extent (Y axis)
+    dist_for_height = (dy / 2.0) / tan_half_fov if dy > 0 else 0
+
+    # Distance needed to fit horizontal extent (XZ diagonal during orbit)
+    dist_for_width = (xz_diagonal / 2.0) / tan_half_fov_h if xz_diagonal > 0 else 0
+
+    # Use the larger of the two with padding
+    padding = 1.15 if use_full_bounds else 1.25
+    radius = max(dist_for_height, dist_for_width, 1e-6) * padding
+
     elevation = radius * np.tan(np.radians(_CAMERA_ELEVATION_DEG))
 
     logger.info(
         f"Camera framing: focal={focal_point}, radius={radius:.2f}, "
-        f"elevation={elevation:.2f}, focus_extents=({dx:.2f}, {dy:.2f}, {dz:.2f})"
+        f"elevation={elevation:.2f}, focus_extents=({dx:.2f}, {dy:.2f}, {dz:.2f}), "
+        f"xz_diagonal={xz_diagonal:.2f}, dist_h={dist_for_height:.2f}, "
+        f"dist_w={dist_for_width:.2f}, use_full_bounds={use_full_bounds}"
     )
 
     return focal_point, radius, elevation

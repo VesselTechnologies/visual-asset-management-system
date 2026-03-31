@@ -129,7 +129,7 @@ paths:
     /asset-links:
         post:
             summary: "Create a new asset link."
-            description: "Create a new asset link between two assets with relationship type and optional metadata. Supports 'related' and 'parentChild' relationship types with cycle detection."
+            description: "Create a new asset link between two assets with relationship type and optional metadata. Supports 'related' and 'parentChild' relationship types with cycle detection. Assets can be in different databases (cross-database links)."
             requestBody:
                 required: true
                 content:
@@ -2655,7 +2655,7 @@ paths:
 
     /database/{databaseId}/assets/{assetId}/copyFile:
         post:
-            summary: "Copy a file within an asset or to another asset."
+            summary: "Copy a file within an asset, to another asset, or across databases."
             requestBody:
                 required: true
                 content:
@@ -6311,8 +6311,286 @@ paths:
                                 $ref: '#/components/schemas/error'
             security:
                 - DefaultCognitoAuthorizer: []
+    /auth/api-keys:
+        get:
+            summary: "List all API keys."
+            description: "Retrieve a list of all API keys. Returns metadata only; key hashes are never exposed."
+            responses:
+                "200":
+                    description: API keys retrieved successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    Items:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/apiKeyMetadata"
+                "403":
+                    description: Not authorized to list API keys.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "500":
+                    description: Error processing request.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+            security:
+                - DefaultCognitoAuthorizer: []
+        post:
+            summary: "Create a new API key."
+            description: "Create a new API key for programmatic access. The plaintext API key is returned exactly once in the response and cannot be retrieved again."
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                apiKeyName:
+                                    type: string
+                                    description: "User-assigned name for the API key (immutable after creation)"
+                                userId:
+                                    type: string
+                                    description: "VAMS user ID this key acts as"
+                                description:
+                                    type: string
+                                    description: "Optional description of the API key"
+                                expiresAt:
+                                    type: string
+                                    format: date-time
+                                    description: "Optional ISO 8601 expiration date"
+                            required:
+                                - apiKeyName
+                                - userId
+            responses:
+                "200":
+                    description: API key created successfully. The apiKey field contains the plaintext key shown only once.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/apiKeyCreateResponse"
+                "400":
+                    description: Invalid parameters.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "403":
+                    description: Not authorized to create API keys.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "500":
+                    description: Error processing request.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+            security:
+                - DefaultCognitoAuthorizer: []
+    /auth/api-keys/{apiKeyId}:
+        get:
+            summary: "Get a specific API key."
+            description: "Retrieve metadata for a specific API key by its ID."
+            parameters:
+                - name: apiKeyId
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: "The unique identifier of the API key"
+            responses:
+                "200":
+                    description: API key metadata retrieved successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/apiKeyMetadata"
+                "403":
+                    description: Not authorized to view this API key.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "404":
+                    description: API key not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "500":
+                    description: Error processing request.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+            security:
+                - DefaultCognitoAuthorizer: []
+        put:
+            summary: "Update an API key."
+            description: "Update the description, expiration date, and/or active status of an existing API key. The key name and userId cannot be changed. At least one field must be provided."
+            parameters:
+                - name: apiKeyId
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: "The unique identifier of the API key"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                description:
+                                    type: string
+                                    description: "Updated description"
+                                expiresAt:
+                                    type: string
+                                    format: date-time
+                                    description: "Updated expiration date (ISO 8601)"
+                                isActive:
+                                    type: string
+                                    enum: ["true", "false"]
+                                    description: "Enable or disable the API key"
+            responses:
+                "200":
+                    description: API key updated successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/apiKeyMetadata"
+                "400":
+                    description: Invalid parameters.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "403":
+                    description: Not authorized to update this API key.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "404":
+                    description: API key not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "500":
+                    description: Error processing request.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+            security:
+                - DefaultCognitoAuthorizer: []
+        delete:
+            summary: "Delete an API key."
+            description: "Permanently delete an API key. This action cannot be undone."
+            parameters:
+                - name: apiKeyId
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                  description: "The unique identifier of the API key"
+            responses:
+                "200":
+                    description: API key deleted successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "API key deleted successfully"
+                "403":
+                    description: Not authorized to delete this API key.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "404":
+                    description: API key not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+                "500":
+                    description: Error processing request.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/error'
+            security:
+                - DefaultCognitoAuthorizer: []
 components:
     schemas:
+        apiKeyMetadata:
+            type: object
+            properties:
+                apiKeyId:
+                    type: string
+                    description: "UUID primary identifier"
+                apiKeyName:
+                    type: string
+                    description: "User-assigned name (immutable after creation)"
+                description:
+                    type: string
+                    description: "Editable description"
+                userId:
+                    type: string
+                    description: "VAMS user ID this key acts as"
+                createdBy:
+                    type: string
+                    description: "Who created the key"
+                createdAt:
+                    type: string
+                    format: date-time
+                    description: "ISO 8601 creation timestamp"
+                updatedAt:
+                    type: string
+                    format: date-time
+                    description: "ISO 8601 last update timestamp"
+                expiresAt:
+                    type: string
+                    format: date-time
+                    description: "ISO 8601 expiration date"
+                isActive:
+                    type: string
+                    enum: ["true", "false"]
+                    description: "Soft disable flag"
+            required:
+                - apiKeyId
+                - apiKeyName
+                - userId
+                - createdBy
+                - createdAt
+                - isActive
+
+        apiKeyCreateResponse:
+            type: object
+            description: "Response returned when creating an API key. The apiKey field contains the plaintext key and is only shown once."
+            allOf:
+                - $ref: "#/components/schemas/apiKeyMetadata"
+                - type: object
+                  properties:
+                      apiKey:
+                          type: string
+                          description: "The plaintext API key (shown only once at creation time). Store this securely."
+                  required:
+                      - apiKey
+
         asset:
             type: object
             properties:
@@ -7022,6 +7300,38 @@ components:
         object_name_pattern_regex:
             type: string
             pattern: ^[a-zA-Z0-9\-._ ]{1,256}$
+        PipelineExecutionType:
+            type: string
+            description: "The execution type for the pipeline"
+            enum:
+                - Lambda
+                - SQS
+                - EventBridge
+            default: Lambda
+
+        UserProvidedResource:
+            type: object
+            description: "Describes a user-provided resource (e.g., SQS queue or EventBridge bus) used by a pipeline"
+            properties:
+                resourceId:
+                    type: string
+                    description: "The resource identifier (e.g., SQS queue URL or EventBridge bus ARN)"
+                resourceType:
+                    type: string
+                    description: "The type of the resource"
+                    enum:
+                        - SQS_QUEUE
+                        - EVENTBRIDGE_BUS
+                isProvided:
+                    type: boolean
+                    description: "Whether the resource is user-provided (true) or managed by VAMS (false)"
+                eventSource:
+                    type: string
+                    description: "EventBridge event source (only for EventBridge resources)"
+                eventDetailType:
+                    type: string
+                    description: "EventBridge event detail-type (only for EventBridge resources)"
+
         pipeline:
             type: object
             properties:
@@ -7040,6 +7350,22 @@ components:
                 outputType:
                     #example: gltf
                     $ref: "#/components/schemas/file_type_regex"
+                pipelineExecutionType:
+                    $ref: "#/components/schemas/PipelineExecutionType"
+                sqsQueueUrl:
+                    type: string
+                    description: "SQS queue URL (required when pipelineExecutionType is SQS)"
+                eventBridgeBusArn:
+                    type: string
+                    description: "EventBridge bus ARN (optional when pipelineExecutionType is EventBridge; defaults to account default bus)"
+                eventBridgeSource:
+                    type: string
+                    description: "EventBridge event source (optional; defaults to 'vams.pipeline')"
+                eventBridgeDetailType:
+                    type: string
+                    description: "EventBridge event detail-type (optional; defaults to the pipelineId)"
+                userProvidedResource:
+                    $ref: "#/components/schemas/UserProvidedResource"
             required:
                 - pipelineId
                 - databaseId
@@ -8002,6 +8328,12 @@ components:
                 destinationAssetId:
                     type: string
                     description: "Optional destination asset ID if copying to another asset"
+                destinationDatabaseId:
+                    type: string
+                    description: "Optional destination database ID for cross-database copy. Defaults to the source database if not provided."
+                    minLength: 4
+                    maxLength: 256
+                    pattern: "^[-_a-zA-Z0-9]{3,63}$"
             required:
                 - sourcePath
                 - destinationPath
@@ -9700,6 +10032,33 @@ components:
                 bool_archived:
                     type: boolean
                     description: "Whether item is archived"
+                str_previewfilekey:
+                    type: string
+                    description: "S3 key of the associated preview file. Empty string if no preview exists. Present on both asset and file index records."
+                str_assetlocationkey:
+                    type: string
+                    description: "S3 key from the asset's assetLocation. Empty string if not set. Only present on asset index records."
+                str_bucketid:
+                    type: string
+                    description: "Bucket ID for the asset"
+                str_bucketname:
+                    type: string
+                    description: "S3 bucket name"
+                str_bucketprefix:
+                    type: string
+                    description: "S3 bucket base prefix"
+                num_filesize:
+                    type: integer
+                    description: "File size in bytes (file index only)"
+                bool_has_asset_children:
+                    type: boolean
+                    description: "Whether asset has child asset links (asset index only)"
+                bool_has_asset_parents:
+                    type: boolean
+                    description: "Whether asset has parent asset links (asset index only)"
+                bool_has_assets_related:
+                    type: boolean
+                    description: "Whether asset has related asset links (asset index only)"
             additionalProperties: true
             required:
                 - _rectype

@@ -28,6 +28,7 @@ const Subscriptions = React.lazy(() => import("./pages/Subscription/Subscription
 const Roles = React.lazy(() => import("./pages/auth/Roles"));
 const UserRoles = React.lazy(() => import("./pages/auth/UserRoles"));
 const CognitoUsers = React.lazy(() => import("./pages/auth/CognitoUsers"));
+const ApiKeys = React.lazy(() => import("./pages/auth/ApiKeys"));
 const ModifyAssetsUploadsPage = React.lazy(() => import("./pages/AssetUpload/ModifyAssetsUploads"));
 const MetadataSchema = React.lazy(() => import("./pages/MetadataSchema"));
 const ViewFile = React.lazy(() => import("./components/single/ViewFile"));
@@ -152,6 +153,11 @@ export const routeTable: RouteOption[] = [
         active: "#/auth/cognitousers/",
     },
     {
+        path: "/auth/api-keys",
+        Page: ApiKeys,
+        active: "#/auth/api-keys/",
+    },
+    {
         path: "/metadataschema/:databaseId",
         Page: MetadataSchema,
         active: "#/metadataschema",
@@ -229,7 +235,7 @@ export const AppRoutes = ({ navigationOpen, setNavigationOpen, user }: AppRoutes
         }
     }, [location, navigate]);
 
-    let allAllowedRoutes: string[] = [];
+    const allAllowedRoutes: string[] = [];
     const [allowedRoutes, setAllowedRoutes] = useState<string[]>(
         routeTable.map((route) => {
             return route.path;
@@ -237,8 +243,8 @@ export const AppRoutes = ({ navigationOpen, setNavigationOpen, user }: AppRoutes
     );
 
     useEffect(() => {
-        let allRoutes = [];
-        for (let route of routeTable) {
+        const allRoutes = [];
+        for (const route of routeTable) {
             if (route.path) {
                 allRoutes.push({
                     method: "GET",
@@ -254,7 +260,7 @@ export const AppRoutes = ({ navigationOpen, setNavigationOpen, user }: AppRoutes
                         throw new Error("webRoutes - " + value[1]);
                     }
 
-                    for (let allowedRoute of value.allowedRoutes) {
+                    for (const allowedRoute of value.allowedRoutes) {
                         allAllowedRoutes.push(allowedRoute.route__path);
                     }
 
@@ -273,7 +279,7 @@ export const AppRoutes = ({ navigationOpen, setNavigationOpen, user }: AppRoutes
         } catch (e) {}
     }, []);
 
-    const buildRoute = (routeOptions: RouteOption, i: number = 0) => {
+    const buildRoute = (routeOptions: RouteOption, i = 0) => {
         const { path, active, Page } = routeOptions;
         return (
             <Route
@@ -281,6 +287,8 @@ export const AppRoutes = ({ navigationOpen, setNavigationOpen, user }: AppRoutes
                 path={path}
                 element={
                     <AppLayout
+                        headerSelector="#headerWrapper"
+                        footerSelector="#appFooter"
                         disableContentPaddings={navigationOpen}
                         content={
                             loading ? (

@@ -23,7 +23,7 @@ import {
     Popover,
     Icon,
 } from "@cloudscape-design/components";
-import { Cache } from "aws-amplify";
+import { appCache } from "../../services/appCache";
 import { LngLatBoundsLike } from "maplibre-gl";
 import PreviewThumbnailCell from "./SearchPreviewThumbnail/PreviewThumbnailCell";
 import { SearchExplanation, getTotalResultCount } from "./types";
@@ -223,7 +223,7 @@ const extractMetadata = (
 function SearchPageMapView({ state, dispatch }: SearchPageViewProps) {
     const [selectedItem, setSelectedItem] = useState<LocationDataWithDetails | null>(null);
     const mapRef = useRef<MapRef>(null);
-    const config = Cache.getItem("config");
+    const config = appCache.getItem("config");
 
     // Get pagination info from state
     const pageSize = state.tablePreferences?.pageSize || 50;
@@ -467,7 +467,16 @@ function SearchPageMapView({ state, dispatch }: SearchPageViewProps) {
                         closeOnClick={false}
                         maxWidth="400px"
                     >
-                        <div style={{ padding: "12px", minWidth: "300px", maxWidth: "400px" }}>
+                        <div
+                            style={{
+                                padding: "12px",
+                                minWidth: "300px",
+                                maxWidth: "400px",
+                                backgroundColor: "var(--vams-bg-primary, #ffffff)",
+                                color: "var(--vams-text-primary, #000716)",
+                                borderRadius: "8px",
+                            }}
+                        >
                             <SpaceBetween direction="vertical" size="s">
                                 {/* Preview thumbnail if enabled */}
                                 {state.showPreviewThumbnails && (

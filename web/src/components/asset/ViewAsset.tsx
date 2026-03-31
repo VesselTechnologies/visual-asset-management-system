@@ -9,14 +9,12 @@ import {
     Box,
     BreadcrumbGroup,
     Container,
-    FormField,
     Header,
-    Select,
     SpaceBetween,
     AlertProps,
 } from "@cloudscape-design/components";
 import { useNavigate, useParams, useLocation } from "react-router";
-import { Cache, API } from "aws-amplify";
+import { appCache } from "../../services/appCache";
 import { AssetDetailContext, assetDetailReducer } from "../../context/AssetDetailContext";
 import { AssetDetail } from "../../pages/AssetUpload/AssetUpload";
 import { fetchAsset, fetchAssetLinks, fetchtagTypes } from "../../services/APIService";
@@ -32,6 +30,7 @@ import { MetadataContainer } from "../metadataV2";
 import localforage from "localforage";
 import Synonyms from "../../synonyms";
 import { featuresEnabled } from "../../common/constants/featuresEnabled";
+import { usePageTitle } from "../../hooks/usePageTitle";
 
 // Fetch tag types and store in localStorage
 fetchtagTypes().then((res) => {
@@ -70,8 +69,10 @@ export default function ViewAsset() {
     const [versions, setVersions] = useState<any[]>([]);
     const [versionsLoading, setVersionsLoading] = useState(false);
 
+    usePageTitle(databaseId, asset?.assetName);
+
     // Config
-    const config = Cache.getItem("config");
+    const config = appCache.getItem("config");
     const [useNoOpenSearch] = useState(
         config?.featuresEnabled?.includes(featuresEnabled.NOOPENSEARCH)
     );
@@ -92,14 +93,14 @@ export default function ViewAsset() {
                     setAsset(item);
                 } else if (typeof item === "string" && item.includes("not found")) {
                     setApiError(
-                        "Asset not found. The requested asset may have been deleted or you may not have permission to access it."
+                        `${Synonyms.Asset} not found. The requested ${Synonyms.asset} may have been deleted or you may not have permission to access it.`
                     );
                     setShowApiError(true);
                     setApiErrorType("error");
                 } else {
                     // Handle other API failure cases
                     setApiError(
-                        "Failed to load asset data. The server returned an invalid response."
+                        `Failed to load ${Synonyms.asset} data. The server returned an invalid response.`
                     );
                     setShowApiError(true);
                     setApiErrorType("error");
@@ -107,7 +108,7 @@ export default function ViewAsset() {
                 }
             } catch (error) {
                 console.error("Error fetching asset:", error);
-                setApiError("Failed to load asset data. Please try again later.");
+                setApiError(`Failed to load ${Synonyms.asset} data. Please try again later.`);
                 setShowApiError(true);
                 setApiErrorType("error");
             }
@@ -178,7 +179,13 @@ export default function ViewAsset() {
                     assetId,
                 });
                 if (success && result?.versions) {
-                    setVersions(result.versions);
+                    // Sort versions by DateModified (newest first)
+                    const sorted = [...result.versions].sort((a: any, b: any) => {
+                        const dateA = new Date(a.DateModified || a.dateModified || 0).getTime();
+                        const dateB = new Date(b.DateModified || b.dateModified || 0).getTime();
+                        return dateB - dateA;
+                    });
+                    setVersions(sorted);
                 }
             } catch (error) {
                 console.log("Failed to load asset versions:", error);
@@ -237,12 +244,16 @@ export default function ViewAsset() {
     return (
         <AssetDetailContext.Provider value={{ state, dispatch }}>
             <StatusMessageProvider>
-                <Box padding={{ top: "s", horizontal: "l" }}>
-                    <SpaceBetween direction="vertical" size="l">
+                <Box padding={{ top: "xs", horizontal: "l" }}>
+                    <SpaceBetween direction="vertical" size="xs">
                         {/* Breadcrumbs */}
                         <BreadcrumbGroup
                             items={[
                                 { text: Synonyms.Databases, href: "#/databases/" },
+                                {
+                                    text: "Search",
+                                    href: "#/assets/",
+                                },
                                 {
                                     text: databaseId,
                                     href: "#/databases/" + databaseId + "/assets/",
@@ -265,72 +276,15 @@ export default function ViewAsset() {
                             </Alert>
                         )}
 
-                        {/* Asset Header */}
-                        <Header variant="h1">
-                            {showApiError
-                                ? "Asset Information Unavailable"
-                                : `${asset?.assetName || ""}${
-                                      asset?.status === "archived" ? " (Archived)" : ""
-                                  }`}
-                        </Header>
-
-                        {/* Version selector dropdown */}
-                        {!showApiError && versions.length > 0 && (
-                            <div style={{ maxWidth: "400px" }}>
-                                <FormField label="Version Selection">
-                                    <Select
-                                        selectedOption={
-                                            selectedVersionId
-                                                ? {
-                                                      label: `v${selectedVersionId}${
-                                                          versions.find(
-                                                              (v: any) =>
-                                                                  v.Version === selectedVersionId
-                                                          )?.versionAlias
-                                                              ? ` (${
-                                                                    versions.find(
-                                                                        (v: any) =>
-                                                                            v.Version ===
-                                                                            selectedVersionId
-                                                                    )?.versionAlias
-                                                                })`
-                                                              : ""
-                                                      }`,
-                                                      value: selectedVersionId,
-                                                  }
-                                                : {
-                                                      label: "LATEST (Non-Versioned)",
-                                                      value: "__LATEST__",
-                                                  }
-                                        }
-                                        onChange={({ detail }) => {
-                                            const val = detail.selectedOption.value;
-                                            handleVersionChange(
-                                                val === "__LATEST__" ? null : val || null
-                                            );
-                                        }}
-                                        options={[
-                                            {
-                                                label: "LATEST (Non-Versioned)",
-                                                value: "__LATEST__",
-                                            },
-                                            ...versions.map((v: any) => ({
-                                                label: `v${v.Version}${
-                                                    v.versionAlias ? ` (${v.versionAlias})` : ""
-                                                } - ${v.Comment || "No comment"} (${new Date(
-                                                    v.DateModified
-                                                ).toLocaleDateString()})`,
-                                                value: v.Version,
-                                            })),
-                                        ]}
-                                        placeholder="Select version"
-                                        loadingText="Loading versions..."
-                                        statusType={versionsLoading ? "loading" : "finished"}
-                                    />
-                                </FormField>
-                            </div>
+                        {/* Asset Header - only shown on error, otherwise asset name is in the details container */}
+                        {showApiError && (
+                            <Header variant="h1">{`${Synonyms.Asset} Information Unavailable`}</Header>
                         )}
+                    </SpaceBetween>
 
+                    {/* Content with more spacing between containers */}
+                    <div style={{ marginTop: "12px" }} />
+                    <SpaceBetween direction="vertical" size="xs">
                         {/* Only render asset details and related components if there's no API error */}
                         {!showApiError && (
                             <>
@@ -340,6 +294,10 @@ export default function ViewAsset() {
                                     databaseId={databaseId || ""}
                                     onOpenUpdateAsset={handleOpenUpdateAsset}
                                     onOpenDeleteModal={handleOpenDeleteModal}
+                                    versions={versions}
+                                    versionsLoading={versionsLoading}
+                                    selectedVersionId={selectedVersionId}
+                                    onVersionChange={handleVersionChange}
                                 />
 
                                 {/* Tabbed Container */}
@@ -370,6 +328,7 @@ export default function ViewAsset() {
                             </>
                         )}
                     </SpaceBetween>
+                    <div style={{ paddingBottom: "20px" }} />
                 </Box>
 
                 {/* Modals */}
@@ -402,7 +361,7 @@ export default function ViewAsset() {
                     onSuccess={(operation) => {
                         setShowDeleteModal(false);
                         // Navigate back to search page after successful deletion / archival
-                        navigate(databaseId ? `/search/${databaseId}/assets` : "/search");
+                        navigate(databaseId ? `/databases/${databaseId}/assets` : "/assets");
                     }}
                 />
             </StatusMessageProvider>

@@ -6,6 +6,7 @@ import {
     DirectoryTreeProps,
     FileManagerContextType,
 } from "../types/FileManagerTypes";
+import Synonyms from "../../../synonyms";
 import "./FileTreeView.css";
 
 // Create a context that will be overridden by the main component
@@ -107,7 +108,7 @@ function TreeItem({ item }: TreeItemProps) {
                         item.level > 0 && (
                             <span
                                 className="not-included-icon"
-                                title="Not included in Current Asset Version"
+                                title={`Not included in Current ${Synonyms.Asset} Version`}
                             >
                                 <Icon name="status-warning" />
                             </span>
@@ -201,7 +202,7 @@ function SearchResults({}: SearchResultsProps) {
                                 item.level > 0 && (
                                     <span
                                         className="not-included-icon"
-                                        title="Not included in Current Asset Version"
+                                        title={`Not included in Current ${Synonyms.Asset} Version`}
                                     >
                                         <Icon name="status-warning" />
                                     </span>
@@ -272,7 +273,7 @@ export function DirectoryTree({}: DirectoryTreeProps) {
                     <div
                         style={{
                             fontSize: "12px",
-                            color: "#666",
+                            color: "var(--vams-text-secondary)",
                             marginTop: "4px",
                             display: "flex",
                             alignItems: "center",
@@ -280,7 +281,7 @@ export function DirectoryTree({}: DirectoryTreeProps) {
                         }}
                     >
                         <span>{loadingMessage}</span>
-                        <span style={{ color: "#0972d3" }}>
+                        <span style={{ color: "var(--vams-color-info)" }}>
                             Page {state.loadingProgress.current}
                         </span>
                     </div>

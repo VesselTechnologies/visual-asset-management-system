@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { Cache } from "aws-amplify";
+import { appCache } from "../../services/appCache";
 import { useNavigate } from "react-router-dom";
 import { Grid, Alert, SegmentedControl, Box } from "@cloudscape-design/components";
 import { featuresEnabled } from "../../common/constants/featuresEnabled";
@@ -21,7 +21,7 @@ import ToastManager from "./SearchNotifications/ToastManager";
 import SearchPageListView from "./SearchPageListView";
 import SearchPageMapView from "./SearchPageMapView";
 import ListPage from "../../pages/ListPage";
-import { AssetListDefinition } from "../list/list-definitions/AssetListDefinition.js";
+import { AssetListDefinition } from "../list/list-definitions/AssetListDefinition";
 import { fetchAllAssets, fetchDatabaseAssets } from "../../services/APIService";
 import { ResizableSplitter } from "../filemanager/components/ResizableSplitter";
 import Synonyms from "../../synonyms";
@@ -38,7 +38,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     databaseId: propDatabaseId,
     embedded,
 }) => {
-    const config = Cache.getItem("config");
+    const config = appCache.getItem("config");
     const navigate = useNavigate();
     const { databaseId: urlDatabaseId } = useParams<{ databaseId?: string }>();
 
@@ -430,7 +430,7 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
         return (
             <Box>
                 <Alert type="info" header="Limited Search Mode">
-                    OpenSearch is disabled. Using basic asset listing instead.
+                    {`OpenSearch is disabled. Using basic ${Synonyms.asset} listing instead.`}
                 </Alert>
                 <ListPage
                     singularName={Synonyms.Asset}
@@ -775,9 +775,8 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                     embedded?.title ||
                     (databaseId
                         ? `${Synonyms.Assets} for ${databaseId}`
-                        : "Assets and Files - Search")
+                        : `${Synonyms.Assets} and Files - Search`)
                 }
-                description={mode === "full" ? "Search and filter assets and files" : undefined}
             />
 
             {/* Error Display - removed, using toast notifications instead */}
