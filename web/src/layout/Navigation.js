@@ -99,7 +99,7 @@ export function Navigation({
                     ? [
                         {
                             type: "link",
-                            text: "User Management",
+                            text: "Add New User",
                             href: "#/auth/cognitousers/",
                         },
                     ]
