@@ -213,8 +213,8 @@ export default function CognitoUsers() {
                                 </Alert>
                             )}
                             <FormField
-                                label="User ID"
-                                constraintText="Required. Enter user ID (3-256 characters, alphanumeric with . + - @)"
+                                label="Username (User ID)"
+                                constraintText="Required. Enter username (3-256 characters, alphanumeric with . + - @)"
                                 errorText={userIdError}
                             >
                                 <Input
@@ -224,7 +224,7 @@ export default function CognitoUsers() {
                                         setUserIdError(validateUserId(detail.value));
                                         setSuccessMessage("");
                                     }}
-                                    placeholder="Enter User ID"
+                                    placeholder="Enter Username"
                                     data-testid="userId"
                                 />
                             </FormField>
