@@ -453,14 +453,26 @@ export function fileManagerReducer(
             };
         }
 
-        case "SET_LOADING_PHASE":
+        case "SET_LOADING_PHASE": {
+            const shouldAutoSelect = !state.selectedItem && 
+                (action.payload.phase === "basic-complete" || action.payload.phase === "complete") &&
+                state.fileTree.subTree.length > 0;
+
+            if (shouldAutoSelect) console.log("🎯 Auto-selecting root folder in SET_LOADING_PHASE");
+
             return {
                 ...state,
+                ...(shouldAutoSelect && {
+                    selectedItem: state.fileTree,
+                    selectedItemPath: state.fileTree.relativePath,
+                    selectedItems: [state.fileTree],
+                    selectedItemPaths: [state.fileTree.relativePath],
+                }),
                 loadingPhase: action.payload.phase,
                 loadingProgress: action.payload.progress || state.loadingProgress,
-                // Keep loading true until we reach 'complete' phase
                 loading: action.payload.phase !== "complete",
             };
+        }
 
         case "INIT_LOADING": {
             // Initialize loading state for streaming

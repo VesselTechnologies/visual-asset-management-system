@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
+import React, { useState } from "react";
 
 import Box from "@cloudscape-design/components/box";
+import Button from "@cloudscape-design/components/button";
 import ColumnLayout from "@cloudscape-design/components/column-layout";
 import Container from "@cloudscape-design/components/container";
 import Grid from "@cloudscape-design/components/grid";
 import SpaceBetween from "@cloudscape-design/components/space-between";
 
 import "../styles/landing-page.scss";
+import { CodeBlock } from "../components/common/CodeBlock";
 
 const LandingPage = () => {
     return (
@@ -125,6 +127,200 @@ const LandingPage = () => {
                                             }} />
                                         </div>
                                     </a>
+                                </Container>
+                            </div>
+
+                            <div>
+                                <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
+                                    TIAMAT VAMS Library
+                                </Box>
+                                <Container>
+                                    <SpaceBetween size="m">
+                                        <Box variant="p">
+                                            Welcome to <strong>TIAMAT VAMS</strong>. This platform provides secure access to robotics simulation assets, environments, and models.
+                                        </Box>
+
+                                        <Box variant="p">
+                                            TIAMAT VAMS maintains a library of three fundamental types of digital assets:
+                                        </Box>
+
+                                        <ul>
+                                            <li><strong>Environments</strong> – digital representations of the physical world (terrain, buildings, obstacles, weather, etc.)</li>
+                                            <li><strong>Robots</strong> – models of robotic platforms, including sensors, actuators, and physical constraints</li>
+                                            <li><strong>Models</strong> – intelligent models that guide the robot to complete a task within a given environment</li>
+                                        </ul>
+
+                                        <Box variant="p">
+                                            Through the TIAMAT VAMS interface you can:
+                                        </Box>
+
+                                        <ul>
+                                            <li>Browse, share, and preview available assets</li>
+                                            <li>Share and version control models</li>
+                                            <li>Upload new assets</li>
+                                            <li>Download simulation-ready environments, robots, and models</li>
+                                        </ul>
+
+                                        <Box variant="p">
+                                            These assets are used to create standardized evaluation scenarios for robotics autonomy research.
+                                        </Box>
+
+                                        <Box variant="p">
+                                            Assets can be accessed through the web interface or directly from the terminal using the <strong>PI-ART CLI</strong> (Physical Intelligence Asset Reuse Taskforce).
+                                        </Box>
+                                    </SpaceBetween>
+                                </Container>
+                            </div>
+
+                            <div>
+                                <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
+                                    Using the PI-ART CLI
+                                </Box>
+                                <Container>
+                                    <SpaceBetween size="m">
+                                        <div>
+                                            <Box variant="h3" fontWeight="bold">
+                                                1. Install the CLI
+                                            </Box>
+                                            <Box variant="p">
+                                                First, install <strong>uv</strong> by following the instructions at: <a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank" rel="noopener noreferrer">https://docs.astral.sh/uv/getting-started/installation/</a>
+                                            </Box>
+                                            <Box variant="p">
+                                                Then install the PI-ART CLI:
+                                            </Box>
+                                            <Box variant="p">
+                                                <strong>UV installation (recommended):</strong>
+                                            </Box>
+                                            <CodeBlock>
+                                                uv tool install https://tiamat.vessel-technologies.com/piart-0.1.1-py3-none-any.whl
+                                            </CodeBlock>
+                                        </div>
+
+                                        <div>
+                                            <Box variant="h3" fontWeight="bold">
+                                                2. Authenticate
+                                            </Box>
+                                            <Box variant="p">
+                                                Login to your account:
+                                            </Box>
+                                            <CodeBlock>
+                                                {`piart auth login -u {your_username}`}
+                                            </CodeBlock>
+                                        </div>
+                                    </SpaceBetween>
+                                </Container>
+                            </div>
+
+                            <div>
+                                <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
+                                    Basic Operations
+                                </Box>
+                                <Container>
+                                    <SpaceBetween size="m">
+                                        <div>
+                                            <Box variant="h3" fontWeight="bold">
+                                                Browse Available Repositories
+                                            </Box>
+                                            <Box variant="p">
+                                                List all repositories you have access to:
+                                            </Box>
+                                            <CodeBlock>
+                                                piart repos list
+                                            </CodeBlock>
+                                        </div>
+
+                                        <div>
+                                            <Box variant="h3" fontWeight="bold">
+                                                List Files in a Repository
+                                            </Box>
+                                            <Box variant="p">
+                                                First, identify the repository ID from the list above, then view its contents:
+                                            </Box>
+                                            <CodeBlock>
+                                                {`piart file list -d {database} -a {repository_id}`}
+                                            </CodeBlock>
+                                            <Box variant="p">
+                                                <em>Example output: You'll see a directory structure with files like `/Locomotion/2-StoryStaircase/Loft.usd`</em>
+                                            </Box>
+                                        </div>
+
+                                        <div>
+                                            <Box variant="h3" fontWeight="bold">
+                                                Download Assets
+                                            </Box>
+                                            <SpaceBetween size="s">
+                                                <div>
+                                                    <Box variant="p">
+                                                        <strong>Download a specific file:</strong>
+                                                    </Box>
+                                                    <CodeBlock>
+                                                        {`piart repos download . -d {database} -a {repository_id} --file-key "{file_path}"`}
+                                                    </CodeBlock>
+                                                    <Box variant="p">
+                                                        <em>Example:</em>
+                                                    </Box>
+                                                    <CodeBlock>
+                                                        piart repos download . -d PUBLIC -a xda7e0ee0-3d87-4288-94d7-0b0017bd5f0c --file-key "/Locomotion/2-StoryStaircase/Loft.usd"
+                                                    </CodeBlock>
+                                                </div>
+                                                <div>
+                                                    <Box variant="p">
+                                                        <strong>Download an entire repository:</strong>
+                                                    </Box>
+                                                    <CodeBlock>
+                                                        {`piart repos download /local/path -d {database} -a {repository_id}`}
+                                                    </CodeBlock>
+                                                </div>
+                                            </SpaceBetween>
+                                        </div>
+
+                                        <div>
+                                            <Box variant="h3" fontWeight="bold">
+                                                Upload Assets
+                                            </Box>
+                                            <Box variant="p">
+                                                Upload a file to a repository:
+                                            </Box>
+                                            <CodeBlock>
+                                                {`piart file upload -d {database} -a {repository_id} /path/to/your/file.usd`}
+                                            </CodeBlock>
+                                        </div>
+                                    </SpaceBetween>
+                                </Container>
+                            </div>
+
+                            <div>
+                                <Box fontSize="heading-xl" fontWeight="normal" variant="h2">
+                                    Getting Help
+                                </Box>
+                                <Container>
+                                    <SpaceBetween size="m">
+                                        <div>
+                                            <Box variant="p">
+                                                For detailed information about all available commands and options:
+                                            </Box>
+                                            <CodeBlock>
+                                                piart --help
+                                            </CodeBlock>
+                                        </div>
+
+                                        <div>
+                                            <Box variant="p">
+                                                You can also get help for specific commands:
+                                            </Box>
+                                            <SpaceBetween size="xs">
+                                                <CodeBlock>
+                                                    piart repos --help
+                                                </CodeBlock>
+                                                <CodeBlock>
+                                                    piart file --help
+                                                </CodeBlock>
+                                                <CodeBlock>
+                                                    piart auth --help
+                                                </CodeBlock>
+                                            </SpaceBetween>
+                                        </div>
+                                    </SpaceBetween>
                                 </Container>
                             </div>
 

@@ -17,6 +17,7 @@ import { useToasts } from "./hooks/useToasts";
 import { useDebounce } from "./hooks/useDebounce";
 import { SearchTopBar, SearchSidebar } from "./SearchLayout";
 import CardView from "./SearchResults/CardView";
+import RepositoryCardView from "./SearchResults/RepositoryCardView";
 import ToastManager from "./SearchNotifications/ToastManager";
 import SearchPageListView from "./SearchPageListView";
 import SearchPageMapView from "./SearchPageMapView";
@@ -85,6 +86,10 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
     const [autoRefreshing, setAutoRefreshing] = useState(false);
     const [hasInitialLoad, setHasInitialLoad] = useState(false);
     const [sidebarWidth, setSidebarWidth] = useState(preferences.sidebarWidth || 400);
+
+    // State for NoOpenSearch fallback
+    const [noSearchItems, setNoSearchItems] = useState<any[]>([]);
+    const [noSearchLoading, setNoSearchLoading] = useState(true);
 
     // Initialize search query if provided
     useEffect(() => {
@@ -155,6 +160,53 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
             onSelectionChange(searchState.selectedItems);
         }
     }, [searchState.selectedItems, onSelectionChange]);
+
+    // Load assets for NoOpenSearch mode
+    useEffect(() => {
+        if (useNoOpenSearch) {
+            const loadAssets = async () => {
+                try {
+                    setNoSearchLoading(true);
+                    let assets;
+                    if (databaseId) {
+                        assets = await fetchDatabaseAssets({ 
+                            databaseId, 
+                            showArchived: false, 
+                            maxItems: 100, 
+                            pageSize: 50, 
+                            startingToken: "" 
+                        });
+                    } else {
+                        assets = await fetchAllAssets();
+                    }
+                    
+                    if (assets && Array.isArray(assets)) {
+                        // Convert to search result format
+                        const searchResults = assets.map(asset => ({
+                            _id: asset.assetId,
+                            _source: {
+                                str_assetid: asset.assetId,
+                                str_databaseid: asset.databaseId,
+                                str_assetname: asset.assetName,
+                                str_description: asset.description,
+                                str_assettype: asset.assetType,
+                                list_tags: asset.tags || [],
+                                date_created: asset.createdTimestamp,
+                                str_createdby: asset.createdBy,
+                            }
+                        }));
+                        setNoSearchItems(searchResults);
+                    }
+                } catch (error) {
+                    console.error("Error loading assets:", error);
+                    setNoSearchItems([]);
+                } finally {
+                    setNoSearchLoading(false);
+                }
+            };
+            loadAssets();
+        }
+    }, [useNoOpenSearch, databaseId]);
 
     const handleSearch = async () => {
         try {
@@ -425,22 +477,35 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
         aggregationTotal: searchState.result?.aggregationTotal,
     });
 
-    // Render fallback for NoOpenSearch mode
+    // Render fallback for NoOpenSearch mode using our card view
     if (useNoOpenSearch) {
         return (
-            <Box>
-                <ListPage
-                    singularName={Synonyms.Asset}
-                    singularNameTitleCase={Synonyms.Asset}
-                    pluralName={Synonyms.assets}
-                    pluralNameTitleCase={Synonyms.Assets}
-                    onCreateCallback={handleCreateAsset}
-                    listDefinition={AssetListDefinition}
-                    fetchAllElements={fetchAllAssets}
-                    fetchElements={fetchDatabaseAssets}
-                    hideDeleteButton={true}
-                />
-            </Box>
+            <div>
+                <Box padding={{ bottom: "l" }}>
+                    <ListPage
+                        singularName={Synonyms.Asset}
+                        singularNameTitleCase={Synonyms.Asset}
+                        pluralName={Synonyms.assets}
+                        pluralNameTitleCase={Synonyms.Assets}
+                        onCreateCallback={handleCreateAsset}
+                        listDefinition={AssetListDefinition}
+                        fetchAllElements={fetchAllAssets}
+                        fetchElements={fetchDatabaseAssets}
+                        hideDeleteButton={true}
+                    />
+                </Box>
+                <Box padding={{ top: "l" }}>
+                    <RepositoryCardView
+                        items={noSearchItems}
+                        loading={noSearchLoading}
+                        currentPageIndex={1}
+                        pagesCount={Math.ceil(noSearchItems.length / preferences.pageSize)}
+                        onPageChange={() => {}}
+                        onCreateAsset={showBulkActions ? handleCreateAsset : undefined}
+                        totalItems={noSearchItems.length}
+                    />
+                </Box>
+            </div>
         );
     }
 
@@ -453,8 +518,8 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
             viewOptions.push({ text: "Table", id: "table" });
         }
         // Hide Grid view for now - not fully fleshed out
-        // if (allowedViews.includes('card')) {
-        //     viewOptions.push({ text: 'Grid', id: 'card' });
+        // if (allowedViews.includes("card")) {
+        //     viewOptions.push({ text: "Cards", id: "card" });
         // }
         if (allowedViews.includes("map") && useMapView && recordType === "asset") {
             viewOptions.push({ text: "Map", id: "map" });
@@ -498,7 +563,6 @@ const ModernSearchContainer: React.FC<SearchContainerProps> = ({
                         totalItems={totalResults}
                     />
                 );
-
             case "map":
                 if (useMapView && recordType === "asset") {
                     return <SearchPageMapView state={searchState} dispatch={() => { }} />;

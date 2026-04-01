@@ -28,6 +28,7 @@ import { MoveFilesModal } from "../modals/MoveFilesModal";
 import { FileVersionsModal } from "../modals/FileVersionsModal";
 import { SetPrimaryTypeModal } from "../modals/SetPrimaryTypeModal";
 import { ShareUrlsModal } from "../modals/ShareUrlsModal";
+import { CliCommandModal } from "../modals/CliCommandModal";
 import { RenameFileModal } from "../modals/RenameFileModal";
 import AssetPreviewThumbnail from "./AssetPreviewThumbnail";
 import FilePreviewThumbnail from "./FilePreviewThumbnail";
@@ -209,6 +210,7 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
     const [showDeletePreviewModal, setShowDeletePreviewModal] = useState(false);
     const [isPreviewDeleting, setIsPreviewDeleting] = useState(false);
     const [showShareUrlsModal, setShowShareUrlsModal] = useState(false);
+    const [showCliCommandModal, setShowCliCommandModal] = useState(false);
     const [showFileViewerModal, setShowFileViewerModal] = useState(false);
     const [modalFiles, setModalFiles] = useState<FileInfo[]>([]);
     const [showRenameFileModal, setShowRenameFileModal] = useState(false);
@@ -587,6 +589,11 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
                                                             text: "Share File(s) URL",
                                                             iconName: "share",
                                                         },
+                                                        {
+                                                            id: "terminal",
+                                                            text: "Terminal Command",
+                                                            iconName: "status-info",
+                                                        },
                                                     ]}
                                                     onItemClick={({ detail }) => {
                                                         switch (detail.id) {
@@ -596,9 +603,11 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
                                                             case "share":
                                                                 setShowShareUrlsModal(true);
                                                                 break;
+                                                            case "terminal":
+                                                                setShowCliCommandModal(true);
+                                                                break;
                                                         }
-                                                    }}
-                                                >
+                                                    }}>
                                                     Export
                                                 </ButtonDropdown>
 
@@ -849,6 +858,14 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
                     assetVersionId={state.assetVersionId}
                 />
 
+                <CliCommandModal
+                    visible={showCliCommandModal}
+                    onDismiss={() => setShowCliCommandModal(false)}
+                    selectedFiles={isMultiSelect ? selectedItems : (selectedItem ? [selectedItem] : [])}
+                    databaseId={databaseId!}
+                    assetId={assetId!}
+                />
+
                 {/* Delete Preview Modal */}
                 <Modal
                     visible={showDeletePreviewModal}
@@ -1059,6 +1076,12 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
                                             iconName: "share",
                                             disabled: !hasFolderContent(selectedItem),
                                         },
+                                        {
+                                            id: "terminal-folder",
+                                            text: "Terminal Command",
+                                            iconName: "status-info",
+                                            disabled: !hasFolderContent(selectedItem),
+                                        },
                                     ]}
                                     onItemClick={({ detail }) => {
                                         if (detail.id === "download-folder") {
@@ -1073,6 +1096,8 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
                                             );
                                         } else if (detail.id === "share-folder") {
                                             setShowShareUrlsModal(true);
+                                        } else if (detail.id === "terminal-folder") {
+                                            setShowCliCommandModal(true);
                                         }
                                     }}
                                 >
@@ -1169,6 +1194,11 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
                                                     text: "Share File URL",
                                                     iconName: "share",
                                                 },
+                                                {
+                                                    id: "terminal",
+                                                    text: "Terminal Command",
+                                                    iconName: "status-info",
+                                                },
                                             ]}
                                             onItemClick={({ detail }) => {
                                                 switch (detail.id) {
@@ -1177,6 +1207,9 @@ export function FileDetailsPanel({ }: FileInfoPanelProps) {
                                                         break;
                                                     case "share":
                                                         setShowShareUrlsModal(true);
+                                                        break;
+                                                    case "terminal":
+                                                        setShowCliCommandModal(true);
                                                         break;
                                                 }
                                             }}
