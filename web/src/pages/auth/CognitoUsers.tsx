@@ -213,8 +213,8 @@ export default function CognitoUsers() {
                                 </Alert>
                             )}
                             <FormField
-                                label="User ID"
-                                constraintText="Required. Enter user ID (3-256 characters, alphanumeric with . + - @)"
+                                label="Username"
+                                constraintText="Required. Enter username (3-256 characters, alphanumeric with . + - @)"
                                 errorText={userIdError}
                             >
                                 <Input
