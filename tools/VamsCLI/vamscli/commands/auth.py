@@ -288,7 +288,7 @@ def login(ctx: click.Context, username: str, password: str, save_credentials: bo
                 """Format Cognito authentication result for CLI display."""
                 lines = []
                 lines.append(f"  User ID: {data['user_id']}")
-                lines.append(f"  Access token expires in: {data['expires_in_seconds']} seconds")
+                # lines.append(f"  Access token expires in: {data['expires_in_seconds']} seconds")
                 if data.get('credentials_saved'):
                     lines.append("  Credentials saved for automatic re-authentication")
                 return '\n'.join(lines)
