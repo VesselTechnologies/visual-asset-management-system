@@ -350,14 +350,10 @@ def main() -> None:
     
     # Check if VamsCLI has been configured, prompt for setup if needed
     if not skip_setup_check and not _is_vamscli_configured():
-        print("🔍 Debug: VamsCLI not configured, running automatic setup...")
+        # print("🔍 Debug: VamsCLI not configured, running automatic setup...")
         if not _prompt_for_setup():
             print("\n❌ Setup required to use PIART. Exiting.")
             sys.exit(1)
-    elif not skip_setup_check:
-        print("🔍 Debug: VamsCLI already configured, skipping setup")
-    else:
-        print("🔍 Debug: Skipping setup check for this command")
     
     vamscli_args = _translate_args(user_args)
     cmd = ['vamscli'] + vamscli_args
