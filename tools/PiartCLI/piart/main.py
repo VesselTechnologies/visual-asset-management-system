@@ -12,6 +12,7 @@ import re
 import sys
 import subprocess
 import shutil
+from pathlib import Path
 
 try:
     from dotenv import load_dotenv
@@ -34,6 +35,78 @@ def _check_vamscli_available():
         print(f"Warning: Could not install bundled vamscli: {e}")
         
     return False
+
+
+def _get_vamscli_config_dir():
+    """Get the VamsCLI configuration directory path."""
+    config_name = "vamscli"
+    
+    if sys.platform == "win32":
+        base_dir = os.environ.get("APPDATA")
+        if not base_dir:
+            base_dir = Path.home() / "AppData" / "Roaming"
+        else:
+            base_dir = Path(base_dir)
+    elif sys.platform == "darwin":
+        base_dir = Path.home() / "Library" / "Application Support"
+    else:  # Linux and other Unix-like systems
+        base_dir = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    
+    return base_dir / config_name
+
+
+def _is_vamscli_configured():
+    """Check if VamsCLI has been configured (has a valid configuration file)."""
+    config_dir = _get_vamscli_config_dir()
+    
+    # Check for default profile configuration
+    default_config = config_dir / "profiles" / "default" / "config.json"
+    if default_config.exists():
+        return True
+    
+    # Check for legacy configuration (backward compatibility)
+    legacy_config = config_dir / "config.json"
+    if legacy_config.exists():
+        return True
+    
+    return False
+
+
+def _prompt_for_setup():
+    """Run automatic setup with preconfigured backend URL."""
+    # Hardcoded backend URL
+    backend_url = "https://97o933vkj1.execute-api.us-east-1.amazonaws.com"
+    
+    # print("\n🔧 PIART Setup Required")
+    # print("="*50)
+    # print("This appears to be your first time using PIART.")
+    # print(f"Configuring with preconfigured backend: {backend_url}")
+    # print("This may take a moment...\n")
+    
+    try:
+        # Run vamscli setup command
+        result = subprocess.run([
+            "vamscli", "setup", backend_url
+        ], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            # print("✅ Setup completed successfully!")
+            # print(_translate_output(result.stdout))
+            # print("\n🎉 PIART is now ready to use!")
+            # print("Next steps:")
+            # print("  1. Run 'piart auth login -u <username>' to authenticate")
+            # print("  2. Use 'piart --help' to see available commands")
+            return True
+        else:
+            error_output = _translate_output(result.stderr)
+            print(f"❌ Setup failed: {error_output}")
+            print("Please contact support if this issue persists.")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Setup error: {e}")
+        print("Please contact support if this issue persists.")
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -267,6 +340,25 @@ def main() -> None:
         sys.exit(1)
         
     user_args = sys.argv[1:]
+    
+    # Skip setup check if user is running setup command explicitly 
+    # or help/version commands
+    skip_setup_check = (
+        len(user_args) > 0 and user_args[0] in ['setup', '--help', '-h', '--version'] or
+        '--help' in user_args or '-h' in user_args or '--version' in user_args
+    )
+    
+    # Check if VamsCLI has been configured, prompt for setup if needed
+    if not skip_setup_check and not _is_vamscli_configured():
+        print("🔍 Debug: VamsCLI not configured, running automatic setup...")
+        if not _prompt_for_setup():
+            print("\n❌ Setup required to use PIART. Exiting.")
+            sys.exit(1)
+    elif not skip_setup_check:
+        print("🔍 Debug: VamsCLI already configured, skipping setup")
+    else:
+        print("🔍 Debug: Skipping setup check for this command")
+    
     vamscli_args = _translate_args(user_args)
     cmd = ['vamscli'] + vamscli_args
 

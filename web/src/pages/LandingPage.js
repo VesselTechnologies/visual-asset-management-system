@@ -192,7 +192,7 @@ const LandingPage = () => {
                                                 <strong>UV installation (recommended):</strong>
                                             </Box>
                                             <CodeBlock>
-                                                uv tool install https://tiamat.vessel-technologies.com/piart-0.1.1-py3-none-any.whl
+                                                uv tool install https://tiamat.vessel-technologies.com/piart-0.1.2-py3-none-any.whl
                                             </CodeBlock>
                                         </div>
 

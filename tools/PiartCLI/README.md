@@ -2,7 +2,24 @@
 
 A thin wrapper around [`vamscli`](../VamsCLI) that exposes `repo`/`repos` terminology instead of `asset`/`assets`. All actual logic lives in `vamscli` — `piart` purely translates vocabulary in both directions.
 
+## Key Features
+
+- **🔄 Automatic Setup**: Automatically installs `vamscli` and configures with preconfigured backend on first run
+- **📝 Vocabulary Translation**: Seamlessly translates between `repo`/`repos` (PIART) and `asset`/`assets` (VamsCLI)  
+- **🔐 Auto-Reauthentication**: Automatically re-authenticates when sessions expire (with `.env` support)
+- **⚡ Zero Configuration**: Just install and run - everything else is handled automatically
+
 ## How it works
+
+### Automatic First-Run Setup
+
+On your first run, `piart` automatically:
+
+1. **Installs VamsCLI**: Downloads and installs the bundled `vamscli` dependency
+2. **Configures Backend**: Uses the preconfigured backend URL and runs setup automatically  
+3. **Ready to Use**: You can immediately start using `piart` commands
+
+### Vocabulary Translation
 
 | User types | Forwarded to vamscli as |
 |---|---|
@@ -32,16 +49,38 @@ pip install "git+https://github.com/awslabs/visual-asset-management-system.git#s
 
 ## Usage
 
+### Quick Start (First Time)
+
+```bash
+# Just run any piart command - setup happens automatically!
+piart repos list
+
+# On first run, you'll see:
+# 🔧 PIART Setup Required
+# This appears to be your first time using PIART.
+# Configuring with preconfigured backend: https://97o933vkj1.execute-api.us-east-1.amazonaws.com
+# ✅ Setup completed successfully!
+```
+
+### Regular Commands
+
 `piart` accepts the same flags and subcommands as `vamscli`, with `repo`/`repos` substituted for `asset`/`assets`:
 
 ```bash
 piart --help
-piart setup <api-gateway-url>
 piart auth login -u user@example.com
 piart repos list -d my-database
 piart repos create -d my-database --name "My Repo" --description "desc" --distributable
 piart repos get my-repo -d my-database
 piart repos delete my-repo -d my-database --confirm
+```
+
+### Manual Setup (Optional)
+
+You can also run setup manually with the preconfigured backend:
+
+```bash
+piart setup https://97o933vkj1.execute-api.us-east-1.amazonaws.com
 ```
 
 All other commands (`auth`, `database`, `tag`, `workflow`, etc.) pass through unchanged.
@@ -69,3 +108,29 @@ You have two options:
    ```bash
    python -m piart repos list
    ```
+
+**Setup fails during first run**
+
+If the automatic setup process fails:
+
+1. **Check network connectivity**: Ensure you can reach the preconfigured backend URL from your machine
+2. **Manual setup**: Try running setup manually: `piart setup https://97o933vkj1.execute-api.us-east-1.amazonaws.com`
+3. **Check vamscli logs**: The underlying error may be logged in vamscli log files
+4. **Contact support**: If the issue persists, contact support with the error details
+
+**VamsCLI installation fails**
+
+If the automatic vamscli installation fails:
+1. Try installing vamscli manually: `pip install vamscli`
+2. Check that you have sufficient permissions to install packages
+3. If using a virtual environment, ensure it's activated
+
+**Skip automatic setup**
+
+If you need to skip the automatic setup (e.g., for testing):
+```bash
+# These commands won't trigger automatic setup
+piart --help
+piart --version
+piart setup https://97o933vkj1.execute-api.us-east-1.amazonaws.com  # Manual setup
+```
