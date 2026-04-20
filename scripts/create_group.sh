@@ -129,6 +129,19 @@ cat > "$ADMIN_TEMPLATE_FILE" <<EOF
       ]
     },
     {
+      "name": "{{ROLE_NAME}}-deny-cognito-user-mgmt",
+      "description": "Deny PUT and DELETE on Cognito user management API for {{ROLE_NAME}}",
+      "objectType": "api",
+      "criteriaAnd": [
+        {"field": "route__path", "operator": "starts_with", "value": "/user/cognito"}
+      ],
+      "criteriaOr": [],
+      "groupPermissions": [
+        {"action": "PUT", "type": "deny"},
+        {"action": "DELETE", "type": "deny"}
+      ]
+    },
+    {
       "name": "{{ROLE_NAME}}-web",
       "description": "Allow GET/PUT/POST/DELETE on all allowed web paths for {{ROLE_NAME}}",
       "objectType": "web",
@@ -331,6 +344,19 @@ cat > "$USER_TEMPLATE_FILE" <<EOF
         {"action": "PUT", "type": "allow"},
         {"action": "POST", "type": "allow"},
         {"action": "DELETE", "type": "allow"}
+      ]
+    },
+    {
+      "name": "{{ROLE_NAME}}-deny-cognito-user-mgmt",
+      "description": "Deny PUT and DELETE on Cognito user management API for {{ROLE_NAME}}",
+      "objectType": "api",
+      "criteriaAnd": [
+        {"field": "route__path", "operator": "starts_with", "value": "/user/cognito"}
+      ],
+      "criteriaOr": [],
+      "groupPermissions": [
+        {"action": "PUT", "type": "deny"},
+        {"action": "DELETE", "type": "deny"}
       ]
     },
     {
